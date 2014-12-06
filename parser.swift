@@ -1,3 +1,6 @@
+import Darwin
+import Cocoa
+
 //---------------------------------//
 // Inputs
 //---------------------------------//
@@ -5,6 +8,25 @@ protocol CharStream {
   func startsWith(String) -> Bool
   func advance(Int) -> Self
 }
+
+final class BasicString : CharStream {
+  let str: String
+
+  init(str: String) {
+    self.str = str
+  }
+
+  func startsWith(query: String) -> Bool {
+    return str.hasPrefix(query)
+  }
+
+  func advance(count: Int) -> BasicString {
+    let index = Swift.advance(str.startIndex, count)
+    let substring = str.substringFromIndex(index)
+    return BasicString(str: substring)
+  }
+}
+
 
 
 
@@ -31,6 +53,17 @@ enum Result<T, S : CharStream> {
   }
   init(stream: S, msg: String) {
     self = .Failure(Box<S>(item: stream), msg)
+  }
+
+  var Value: T? {
+    get {
+      switch self {
+        case Success(let val, _):
+          return val.item
+        default:
+          return nil
+      }
+    }
   }
 }
 
@@ -87,3 +120,8 @@ class FollowedBy<T1 : Parser, T2 : Parser> : Parser {
   }
 }
 */
+
+let source = BasicString(str: "Hello world")
+let cnst = Constant(str: "Hello")
+let result = cnst.parse(source)
+println(result.Value)
