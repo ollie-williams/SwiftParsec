@@ -143,9 +143,14 @@ class FollowedBy<T1 : Parser, T2 : Parser> : Parser {
   }
 }
 
+infix operator >> {associativity left precedence 140}
+func >><T1: Parser, T2: Parser>(first: T1, second: T2) -> FollowedBy<T1,T2> {
+  return FollowedBy(first: first, second: second)
+}
+
 let source = BasicString(str: "HelloWorld")
 let cnst1 = Constant(str: "Hello")
 let cnst2 = Constant(str: "World")
-let parser  = FollowedBy(first: cnst1, second: cnst2)
+let parser = cnst1 >> cnst2
 let result = parser.parse(source)
 println(result.Value)
