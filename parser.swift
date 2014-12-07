@@ -97,11 +97,11 @@ class Constant : Parser {
 
   func parse<S: CharStream>(stream: S) -> Result<TargetType, S> {
     if stream.startsWith(str) {
-      return Result<TargetType, S>(
+      return Result(
         value : str,
         stream: stream.advance(countElements(str)))
     } else {
-      return Result<TargetType, S>(
+      return Result(
         stream: stream,
         msg   : "Expected \(str)")
     }
@@ -124,17 +124,13 @@ class FollowedBy<T1 : Parser, T2 : Parser> : Parser {
   func parse<S: CharStream>(stream: S) -> Result<TargetType, S> {
     switch first.parse(stream) {
       case .Failure(_, let msg):
-        return Result<TargetType, S>(
-          stream: stream, msg: msg
-        )
+        return Result(stream: stream, msg: msg)
       case .Success(let fst, let str1):
         switch second.parse(str1.item) {
           case .Failure(_, let msg):
-            return Result<TargetType, S>(
-              stream: stream, msg: msg
-            )
+            return Result(stream: stream, msg: msg)
           case .Success(let snd, let str2):
-            return Result<TargetType, S>(
+            return Result(
               value : (fst.item, snd.item),
               stream: str2.item
             )
