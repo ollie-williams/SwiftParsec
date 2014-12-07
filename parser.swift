@@ -65,6 +65,17 @@ enum Result<T, S : CharStream> {
       }
     }
   }
+
+  var Stream: S {
+    get {
+      switch self {
+        case .Success(_, let stream):
+          return stream.item
+        case .Failure(let stream, _):
+          return stream.item
+      }
+    }
+  }
 }
 
 //---------------------------------//
@@ -96,7 +107,7 @@ class Constant : Parser {
     }
   }
 }
-/*
+
 class FollowedBy<T1 : Parser, T2 : Parser> : Parser {
   let first : T1
   let second: T2
@@ -106,22 +117,35 @@ class FollowedBy<T1 : Parser, T2 : Parser> : Parser {
     self.second = second
   }
 
-  typealias R1 = T1.ReturnType
-  typealias R2 = T2.ReturnType
-  typealias ReturnType = (R1,R2)
+  typealias R1 = T1.TargetType
+  typealias R2 = T2.TargetType
+  typealias TargetType = (R1,R2)
 
-  func Parse(str:CharStream) -> ReturnType? {
-    if let fst = first.Parse(str) {
-      if let snd = second.Parse(str) {
-        return (fst,snd)
-      }
+  func parse<S: CharStream>(stream: S) -> Result<TargetType, S> {
+    switch first.parse(stream) {
+      case .Failure(_, let msg):
+        return Result<TargetType, S>(
+          stream: stream, msg: msg
+        )
+      case .Success(let fst, let str1):
+        switch second.parse(str1.item) {
+          case .Failure(_, let msg):
+            return Result<TargetType, S>(
+              stream: stream, msg: msg
+            )
+          case .Success(let snd, let str2):
+            return Result<TargetType, S>(
+              value : (fst.item, snd.item),
+              stream: str2.item
+            )
+        }
     }
-    return nil
   }
 }
-*/
 
-let source = BasicString(str: "Hello world")
-let cnst = Constant(str: "Hello")
-let result = cnst.parse(source)
+let source = BasicString(str: "HelloWorld")
+let cnst1 = Constant(str: "Hello")
+let cnst2 = Constant(str: "World")
+let parser  = FollowedBy(first: cnst1, second: cnst2)
+let result = parser.parse(source)
 println(result.Value)
