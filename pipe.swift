@@ -10,16 +10,11 @@ class Pipe<T:Parser, V> : Parser {
     self.fn = fn
   }
 
-  func parse<S: CharStream>(stream: S) -> Result<TargetType, S> {
-    switch parser.parse(stream) {
-      case .Success(let value, let str):
-        return Result(
-          value : fn(value.item),
-          stream: str.item
-          )
-      case .Failure(let str, let msg):
-        return Result(stream: str.item, msg: msg)
+  func parse<S: CharStream>(inout stream: S) -> TargetType? {
+    if let value = parser.parse(&stream) {
+      return fn(value)
     }
+    return nil
   }
 }
 
@@ -39,18 +34,14 @@ class Pipe2<T1:Parser, T2:Parser, V> : Parser {
     self.fn = fn
   }
 
-  func parse<S: CharStream>(stream: S) -> Result<TargetType, S> {
-    let fb = FollowedBy(first:first, second:second)
-    switch fb.parseBoth(stream) {
-      case .Success(let vals, let str):
-        let (a,b) = vals.item
-        return Result(
-          value : fn(a, b),
-          stream: str.item
-          )
-        case .Failure(let str, let msg):
-          return Result(stream:str.item, msg:msg)
+  func parse<S: CharStream>(inout stream: S) -> TargetType? {
+    let reset = stream
+    if let a = first.parse(&stream) {
+      if let b = second.parse(&stream) {
+        return fn(a,b)
+      }
     }
+    stream = reset
+    return nil
   }
-
 }

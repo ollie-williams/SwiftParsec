@@ -7,6 +7,7 @@ import Cocoa
 protocol CharStream {
   func startsWith(String) -> Bool
   func advance(Int) -> Self
+  func error(String) -> Void
 }
 
 final class BasicString : CharStream {
@@ -25,6 +26,8 @@ final class BasicString : CharStream {
     let substring = str.substringFromIndex(index)
     return BasicString(str: substring)
   }
+
+  func error(msg: String) -> Void {}
 }
 
 
@@ -83,7 +86,7 @@ enum Result<T, S : CharStream> {
 //---------------------------------//
 protocol Parser {
   typealias TargetType
-  func parse<S:CharStream>(S) -> Result<TargetType, S>
+  func parse<S:CharStream>(inout S) -> TargetType?
 }
 
 class Constant : Parser {
@@ -95,15 +98,12 @@ class Constant : Parser {
 
   typealias TargetType = String
 
-  func parse<S: CharStream>(stream: S) -> Result<TargetType, S> {
+  func parse<S: CharStream>(inout stream:S) -> TargetType? {
     if stream.startsWith(str) {
-      return Result(
-        value : str,
-        stream: stream.advance(countElements(str)))
-    } else {
-      return Result(
-        stream: stream,
-        msg   : "Expected \(str)")
+      stream = stream.advance(countElements(str))
+      return str
     }
+    stream.error("Expected \(str)")
+    return nil
   }
 }
