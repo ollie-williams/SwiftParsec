@@ -18,6 +18,10 @@ class Pipe<T:Parser, V> : Parser {
   }
 }
 
+func pipe<T:Parser, V>(inner: T, fn: T.TargetType -> V) -> Pipe<T,V> {
+  return Pipe(inner:inner, fn:fn)
+}
+
 
 class Pipe2<T1:Parser, T2:Parser, V> : Parser {
   typealias TargetType = V
@@ -44,4 +48,12 @@ class Pipe2<T1:Parser, T2:Parser, V> : Parser {
     stream = reset
     return nil
   }
+}
+
+func pipe2<T1:Parser, T2:Parser, V> (
+    first : T1,
+    second: T2,
+    fn    : (T1.TargetType, T2.TargetType) -> V
+  ) -> Pipe2<T1,T2,V> {
+  return Pipe2(first:first, second:second, fn:fn)
 }

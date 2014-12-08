@@ -1,12 +1,12 @@
 let source = "HelloWorld"
-let cnst1 = Constant(str: "Hello")
-let cnst2 = Constant(str: "World")
+let cnst1 = const("Hello")
+let cnst2 = const("World")
 let parser = cnst1 >>- cnst2
 let result = source |> parser
 println(result)
 
 func function(s:String) -> Int { return countElements(s) }
-let parser2 = Pipe(inner:parser, fn:function)
+let parser2 = pipe(parser, function)
 let result2 = source |> parser2
 println(result2)
 

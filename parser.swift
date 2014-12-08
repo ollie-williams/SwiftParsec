@@ -64,3 +64,7 @@ class Constant : Parser {
     return nil
   }
 }
+
+func const(str: String) -> Constant {
+  return Constant(str:str)
+}
