@@ -1,5 +1,6 @@
 SRCS=\
 	parser.swift \
+	strings.swift \
 	followedBy.swift \
 	pipe.swift \
 	repeats.swift \
