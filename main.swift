@@ -1,15 +1,13 @@
-let source = BasicString(str: "HelloWorld")
+let source = "HelloWorld"
 let cnst1 = Constant(str: "Hello")
 let cnst2 = Constant(str: "World")
 let parser = cnst1 >>- cnst2
-var src1 = source
-let result = parser.parse(&src1)
+let result = source |> parser
 println(result)
 
 func function(s:String) -> Int { return countElements(s) }
 let parser2 = Pipe(inner:parser, fn:function)
-var src2 = source
-let result2 = parser2.parse(&src2)
+let result2 = source |> parser2
 println(result2)
 
 class Expr {

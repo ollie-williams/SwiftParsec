@@ -39,6 +39,13 @@ protocol Parser {
   func parse<S:CharStream>(inout S) -> TargetType?
 }
 
+infix operator |> {associativity left precedence 150}
+func |> <T: Parser>(string: String, parser: T) -> T.TargetType? {
+  var stream = BasicString(str: string)
+  return parser.parse(&stream)
+}
+
+
 class Constant : Parser {
   let str: String
 
