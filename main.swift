@@ -10,6 +10,9 @@ let parser2 = pipe(parser, function)
 let result2 = source |> parser2
 println(result2)
 
+let result3 = "HelloHelloHelloWorld" |> many(const("Hello")) >>- const("World")
+println(result3)
+
 class Expr {
   let symbol  : String
   let children: [Expr]
