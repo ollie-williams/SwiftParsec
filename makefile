@@ -1,6 +1,7 @@
 SRCS=\
 	parser.swift \
 	followedBy.swift \
+	pipe.swift \
 	main.swift
 
 TARGET=octopus
