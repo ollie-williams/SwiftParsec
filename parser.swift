@@ -31,56 +31,6 @@ final class BasicString : CharStream {
 }
 
 
-
-
-//---------------------------------//
-// Outputs
-//---------------------------------//
-
-// box class is used to wrap some other object into a reference so that
-// generic enums are fixed size (something the fledgeling code generator
-// currently requires)
-class Box<T> {
-  let item: T
-  init(item: T) {
-    self.item = item
-  }
-}
-
-enum Result<T, S : CharStream> {
-  case Success(Box<T>, Box<S>)
-  case Failure(Box<S>, String)
-
-  init(value: T, stream: S) {
-    self = .Success(Box<T>(item: value), Box<S>(item: stream))
-  }
-  init(stream: S, msg: String) {
-    self = .Failure(Box<S>(item: stream), msg)
-  }
-
-  var Value: T? {
-    get {
-      switch self {
-        case Success(let val, _):
-          return val.item
-        default:
-          return nil
-      }
-    }
-  }
-
-  var Stream: S {
-    get {
-      switch self {
-        case .Success(_, let stream):
-          return stream.item
-        case .Failure(let stream, _):
-          return stream.item
-      }
-    }
-  }
-}
-
 //---------------------------------//
 // Parsing
 //---------------------------------//
