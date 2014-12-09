@@ -5,6 +5,7 @@ import Cocoa
 // Inputs
 //---------------------------------//
 protocol CharStream {
+  var head:Character? {get}
   func startsWith(String) -> Bool
   func advance(Int) -> Self
   func error(String) -> Void
@@ -15,6 +16,15 @@ final class BasicString : CharStream {
 
   init(str: String) {
     self.str = str
+  }
+
+  var head:Character? {
+    get {
+      if countElements(str) == 0 {
+        return nil
+      }
+      return str[str.startIndex]
+    }
   }
 
   func startsWith(query: String) -> Bool {

@@ -31,7 +31,10 @@ func idChar(c:Character) -> Bool {
       return true
   }
 }
-//let identifier = many(satisfy(idChar))
+let identifier = many1chars(satisfy(idChar))
+
+let result4 = "fooble_barble" |> identifier
+println(result4)
 
 /*
 let fnCall = "(" >>- pipe2(identifier, many(expr)) ->> ")"

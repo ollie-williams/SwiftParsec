@@ -1,3 +1,6 @@
+import Cocoa
+import Darwin
+
 class Constant : Parser {
   let str: String
 
@@ -19,4 +22,42 @@ class Constant : Parser {
 
 func const(str: String) -> Constant {
   return Constant(str:str)
+}
+
+
+class Satisfy : Parser {
+  let condition: Character -> Bool
+
+  typealias TargetType = Character
+
+  init(condition:Character -> Bool) {
+    self.condition = condition
+  }
+
+  func parse<S: CharStream>(inout stream:S) -> TargetType? {
+    if let ch = stream.head {
+      if condition(ch) {
+        stream = stream.advance(1)
+        return ch
+      }
+    }
+    return nil
+  }
+}
+
+func satisfy(condition:Character->Bool) -> Satisfy {
+  return Satisfy(condition)
+}
+
+
+
+// Helpful versions which turn arrays of Characters into Strings
+func arrayToString<T:Parser where T.TargetType==Array<Character>>
+  (parser: T) -> Pipe<T, String> {
+  return pipe(parser, {return String($0)})
+}
+
+func many1chars<T:Parser where T.TargetType==Character>
+  (item:T) -> Pipe<Many<T>, String> {
+  return arrayToString(many1(item))
 }
