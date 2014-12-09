@@ -24,6 +24,29 @@ func const(str: String) -> Constant {
   return Constant(str:str)
 }
 
+class ConstantChar : Parser {
+  typealias TargetType = Character
+  let ch : Character
+
+  init(ch:Character) {
+    self.ch = ch
+  }
+
+  func parse<S:CharStream>(inout stream:S) -> TargetType? {
+    if let c = stream.head {
+      if c == ch {
+        stream = stream.advance(1)
+        return c
+      }
+    }
+    return nil
+  }
+}
+
+func constchar(ch:Character) -> ConstantChar {
+  return ConstantChar(ch:ch)
+}
+
 
 class Satisfy : Parser {
   let condition: Character -> Bool
@@ -55,6 +78,11 @@ func satisfy(condition:Character->Bool) -> Satisfy {
 func arrayToString<T:Parser where T.TargetType==Array<Character>>
   (parser: T) -> Pipe<T, String> {
   return pipe(parser, {return String($0)})
+}
+
+func manychars<T:Parser where T.TargetType==Character>
+  (item:T) -> Pipe<Many<T>, String> {
+  return arrayToString(many(item))
 }
 
 func many1chars<T:Parser where T.TargetType==Character>

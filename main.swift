@@ -23,6 +23,8 @@ class Expr {
   }
 }
 
+let skip = manychars(constchar(" "))
+
 func idChar(c:Character) -> Bool {
   switch c {
     case "(", ")", " ":
@@ -31,9 +33,9 @@ func idChar(c:Character) -> Bool {
       return true
   }
 }
-let identifier = many1chars(satisfy(idChar))
+let identifier = many1chars(satisfy(idChar)) ->> skip
 
-let result4 = "fooble_barble" |> identifier
+let result4 = "fooble_barble gr" |> identifier >> identifier
 println(result4)
 
 /*
