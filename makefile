@@ -4,6 +4,7 @@ SRCS=\
 	followedBy.swift \
 	pipe.swift \
 	repeats.swift \
+	alternates.swift \
 	main.swift
 
 TARGET=octopus

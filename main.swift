@@ -38,6 +38,25 @@ let identifier = many1chars(satisfy(idChar)) ->> skip
 let result4 = "fooble_barble gr" |> identifier >> identifier
 println(result4)
 
+
+enum MyEnum {
+  case Number(Int)
+  case Word(String)
+
+  func tell() -> Void {
+    switch self {
+      case .Number(let v): println(v)
+      case .Word(let s): println(s)
+    }
+  }
+}
+
+let trigger = pipe(const("Hello") ->> skip, { (s:String) -> MyEnum in return MyEnum.Number(42)})
+let opt = trigger | pipe(identifier, {return MyEnum.Word($0)})
+let result5 = "Hello fooble Hello" |> many(opt)
+//println(result5)
+map(result5!, {$0.tell()})
+
 /*
 let fnCall = "(" >>- pipe2(identifier, many(expr)) ->> ")"
 let solo = identifier
