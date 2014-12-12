@@ -1,50 +1,33 @@
 import Cocoa
 import Darwin
 
-class Constant : Parser {
+class Constant<T> : Parser {
+  let value: T
   let str: String
 
-  init(str:String) {
-    self.str = str
+  init(value:T) {
+    self.value = value
+    self.str = "\(value)"
   }
 
-  typealias TargetType = String
+  typealias TargetType = T
 
-  func parse(inout stream: CharStream) -> TargetType? {
+  func parse(stream: CharStream) -> TargetType? {
     if stream.startsWith(str) {
-      stream = stream.advance(countElements(str))
-      return str
+      stream.advance(countElements(str))
+      return value
     }
     stream.error("Expected \(str)")
     return nil
   }
 }
 
-func const(str: String) -> Constant {
-  return Constant(str:str)
+func const(str: String) -> Constant<String> {
+  return Constant(value:str)
 }
 
-class ConstantChar : Parser {
-  typealias TargetType = Character
-  let ch : Character
-
-  init(ch:Character) {
-    self.ch = ch
-  }
-
-  func parse(inout stream: CharStream) -> TargetType? {
-    if let c = stream.head {
-      if c == ch {
-        stream = stream.advance(1)
-        return c
-      }
-    }
-    return nil
-  }
-}
-
-func constchar(ch:Character) -> ConstantChar {
-  return ConstantChar(ch:ch)
+func constchar(ch:Character) -> Constant<Character> {
+  return Constant(value:ch)
 }
 
 
@@ -57,10 +40,10 @@ class Satisfy : Parser {
     self.condition = condition
   }
 
-  func parse(inout stream:CharStream) -> TargetType? {
+  func parse(stream:CharStream) -> TargetType? {
     if let ch = stream.head {
       if condition(ch) {
-        stream = stream.advance(1)
+        stream.advance(1)
         return ch
       }
     }
@@ -71,7 +54,6 @@ class Satisfy : Parser {
 func satisfy(condition:Character->Bool) -> Satisfy {
   return Satisfy(condition)
 }
-
 
 
 // Helpful versions which turn arrays of Characters into Strings

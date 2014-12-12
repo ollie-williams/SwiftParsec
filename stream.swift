@@ -6,28 +6,37 @@ import Cocoa
 //---------------------------------//
 class CharStream {
   let str: String
+  var pos: String.Index
 
   init(str: String) {
     self.str = str
+    self.pos = str.startIndex
   }
 
   var head:Character? {
     get {
-      if countElements(str) == 0 {
-        return nil
+      if pos < str.endIndex {
+        return str[pos]
       }
-      return str[str.startIndex]
+      return nil
+    }
+  }
+
+  var position:String.Index {
+    get {
+      return pos
+    }
+    set {
+      pos = newValue
     }
   }
 
   func startsWith(query: String) -> Bool {
-    return str.hasPrefix(query)
+    return str.substringFromIndex(pos).hasPrefix(query)
   }
 
-  func advance(count: Int) -> CharStream {
-    let index = Swift.advance(str.startIndex, count)
-    let substring = str.substringFromIndex(index)
-    return CharStream(str: substring)
+  func advance(count: Int) -> Void {
+    pos = Swift.advance(pos, count)
   }
 
   func error(msg: String) -> Void {}

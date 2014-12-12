@@ -9,11 +9,11 @@ class Alternates<T1:Parser, T2:Parser where T1.TargetType==T2.TargetType> : Pars
     self.second = second
   }
 
-  func parse(inout stream:CharStream) -> TargetType? {
-    if let fst = first.parse(&stream) {
+  func parse(stream:CharStream) -> TargetType? {
+    if let fst = first.parse(stream) {
       return fst
     }
-    if let snd = second.parse(&stream) {
+    if let snd = second.parse(stream) {
       return snd
     }
     return nil

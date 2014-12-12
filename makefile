@@ -1,12 +1,12 @@
 SRCS=\
 	stream.swift \
 	parser.swift \
+	late.swift \
 	strings.swift \
 	followedBy.swift \
 	pipe.swift \
 	repeats.swift \
 	alternates.swift \
-	late.swift \
 	main.swift
 
 TARGET=octopus

@@ -10,8 +10,8 @@ class Pipe<T:Parser, V> : Parser {
     self.fn = fn
   }
 
-  func parse(inout stream: CharStream) -> TargetType? {
-    if let value = parser.parse(&stream) {
+  func parse(stream: CharStream) -> TargetType? {
+    if let value = parser.parse(stream) {
       return fn(value)
     }
     return nil
@@ -38,14 +38,14 @@ class Pipe2<T1:Parser, T2:Parser, V> : Parser {
     self.fn = fn
   }
 
-  func parse(inout stream: CharStream) -> TargetType? {
-    let reset = stream
-    if let a = first.parse(&stream) {
-      if let b = second.parse(&stream) {
+  func parse(stream: CharStream) -> TargetType? {
+    let old = stream.position
+    if let a = first.parse(stream) {
+      if let b = second.parse(stream) {
         return fn(a,b)
       }
     }
-    stream = reset
+    stream.position = old
     return nil
   }
 }
