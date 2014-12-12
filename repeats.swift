@@ -9,7 +9,7 @@ class Many<T:Parser> : Parser {
     self.emptyOk = emptyOk
   }
 
-  func parse<S:CharStream>(inout stream:S) -> TargetType? {
+  func parse(inout stream:CharStream) -> TargetType? {
     var result = TargetType()
     while let r = body.parse(&stream) {
       result.append(r)

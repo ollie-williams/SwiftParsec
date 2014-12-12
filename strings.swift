@@ -10,7 +10,7 @@ class Constant : Parser {
 
   typealias TargetType = String
 
-  func parse<S: CharStream>(inout stream:S) -> TargetType? {
+  func parse(inout stream: CharStream) -> TargetType? {
     if stream.startsWith(str) {
       stream = stream.advance(countElements(str))
       return str
@@ -32,7 +32,7 @@ class ConstantChar : Parser {
     self.ch = ch
   }
 
-  func parse<S:CharStream>(inout stream:S) -> TargetType? {
+  func parse(inout stream: CharStream) -> TargetType? {
     if let c = stream.head {
       if c == ch {
         stream = stream.advance(1)
@@ -57,7 +57,7 @@ class Satisfy : Parser {
     self.condition = condition
   }
 
-  func parse<S: CharStream>(inout stream:S) -> TargetType? {
+  func parse(inout stream:CharStream) -> TargetType? {
     if let ch = stream.head {
       if condition(ch) {
         stream = stream.advance(1)
