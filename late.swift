@@ -4,6 +4,8 @@ class LateBound<T>: Parser {
 
   var inner: ParseFunc?
 
+  init() {}
+
   func parse(stream:CharStream) -> T? {
     if let impl = inner {
       return impl(stream)

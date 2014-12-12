@@ -1,17 +1,21 @@
+func lnprint<T>(val:T, file: String = __FILE__, line: Int = __LINE__) -> Void {
+  println("\(file)(\(line)): \(val)")
+}
+
 let source = "HelloWorld"
 let cnst1 = const("Hello")
 let cnst2 = const("World")
 let parser = cnst1 >>- cnst2
 let result = source |> parser
-println(result)
+lnprint(result)
 
 func function(s:String) -> Int { return countElements(s) }
 let parser2 = pipe(parser, function)
 let result2 = source |> parser2
-println(result2)
+lnprint(result2)
 
 let result3 = "HelloHelloHelloWorld" |> many(const("Hello")) >>- const("World")
-println(result3)
+lnprint(result3)
 
 class Expr {
   let symbol  : String
@@ -20,6 +24,22 @@ class Expr {
   init(symbol:String, children:[Expr]) {
     self.symbol = symbol
     self.children = children
+  }
+
+  func tell() -> String {
+    if children.count == 0 {
+      return symbol
+    }
+    let tail = children.reduce("", combine: {$0 + " " + $1.tell()})
+    return "(\(symbol)\(tail))"
+  }
+
+  class func MakeFn(symbol:String, children:[Expr]) -> Expr {
+    return Expr(symbol:symbol, children:children)
+  }
+
+  class func MakeLeaf(symbol:String) -> Expr {
+    return Expr(symbol:symbol, children:[])
   }
 }
 
@@ -36,35 +56,16 @@ func idChar(c:Character) -> Bool {
 let identifier = many1chars(satisfy(idChar)) ->> skip
 
 let result4 = "fooble_barble gr" |> identifier >> identifier
-println(result4)
+lnprint(result4)
 
 
-enum MyEnum {
-  case Number(Int)
-  case Word(String)
+let oparen = constchar("(")
+let cparen = constchar(")")
+var expr = LateBound<Expr>()
+let fnCall = oparen >>- pipe2(identifier, many(expr), Expr.MakeFn) ->> cparen ->> skip
+let solo = pipe(identifier, Expr.MakeLeaf)
+let choice = fnCall | solo
+expr.inner = choice.parse
 
-  func tell() -> Void {
-    switch self {
-      case .Number(let v): println(v)
-      case .Word(let s): println(s)
-    }
-  }
-}
-
-let trigger = pipe(const("Hello") ->> skip, { (s:String) -> MyEnum in return MyEnum.Number(42)})
-let opt = trigger | pipe(identifier, {return MyEnum.Word($0)})
-let result5 = "Hello fooble Hello" |> many(opt)
-//println(result5)
-map(result5!, {$0.tell()})
-
-/*
-let fnCall = "(" >>- pipe2(identifier, many(expr)) ->> ")"
-let solo = identifier
-
-func lispParser(s:String) -> Expr {
-  return Expr(
-    symbol: "f",
-    children: []
-  )
-}
-*/
+let result6 = "(f a (b c) (g a b c))" |> expr
+lnprint(result6!.tell())
