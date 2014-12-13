@@ -58,11 +58,8 @@ let identifier = many1chars(satisfy(idChar)) ->> skip
 let result4 = "fooble_barble gr" |> identifier >> identifier
 lnprint(result4)
 
-
-let oparen = constchar("(")
-let cparen = constchar(")")
 var expr = LateBound<Expr>()
-let fnCall = oparen >>- pipe2(identifier, many(expr), Expr.MakeFn) ->> cparen ->> skip
+let fnCall = "(" >>- pipe2(identifier, many(expr), Expr.MakeFn) ->> ")" ->> skip
 let solo = pipe(identifier, Expr.MakeLeaf)
 let choice = fnCall | solo
 expr.inner = choice.parse

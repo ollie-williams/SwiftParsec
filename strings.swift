@@ -71,3 +71,11 @@ func many1chars<T:Parser where T.TargetType==Character>
   (item:T) -> Pipe<Many<T>, String> {
   return arrayToString(many1(item))
 }
+
+// Overloaded followed-by operators
+func >>- <T: Parser>(first: String, second: T) -> FollowedBySecond<Constant<String>,T> {
+  return FollowedBySecond(first: const(first), second: second)
+}
+func ->> <T: Parser>(first: T, second: String) -> FollowedByFirst<T,Constant<String>> {
+  return FollowedByFirst(first: first, second: const(second))
+}
