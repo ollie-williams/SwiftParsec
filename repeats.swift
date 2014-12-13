@@ -1,5 +1,5 @@
 class Many<T:Parser> : Parser {
-  typealias TargetType = [T.TargetType]
+  typealias Target = [T.Target]
 
   let body: T
   let emptyOk: Bool
@@ -9,8 +9,8 @@ class Many<T:Parser> : Parser {
     self.emptyOk = emptyOk
   }
 
-  func parse(stream:CharStream) -> TargetType? {
-    var result = TargetType()
+  func parse(stream:CharStream) -> Target? {
+    var result = Target()
     while let r = body.parse(stream) {
       result.append(r)
     }

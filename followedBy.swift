@@ -7,11 +7,11 @@ class FollowedBy<T1 : Parser, T2 : Parser> : Parser {
     self.second = second
   }
 
-  typealias R1 = T1.TargetType
-  typealias R2 = T2.TargetType
-  typealias TargetType = (R1,R2)
+  typealias R1 = T1.Target
+  typealias R2 = T2.Target
+  typealias Target = (R1,R2)
 
-  func parse(stream: CharStream) -> TargetType? {
+  func parse(stream: CharStream) -> Target? {
     let old = stream.position
     if let a = first.parse(stream) {
       if let b = second.parse(stream) {
@@ -30,9 +30,9 @@ class FollowedByFirst<T1 : Parser, T2 : Parser> : Parser {
     helper = FollowedBy(first:first, second:second)
   }
 
-  typealias TargetType = T1.TargetType
+  typealias Target = T1.Target
 
-  func parse(stream: CharStream) -> TargetType? {
+  func parse(stream: CharStream) -> Target? {
     if let (a,b) = helper.parse(stream) {
       return a
     }
@@ -47,9 +47,9 @@ class FollowedBySecond<T1 : Parser, T2 : Parser> : Parser {
     helper = FollowedBy(first:first, second:second)
   }
 
-  typealias TargetType = T2.TargetType
+  typealias Target = T2.Target
 
-  func parse(stream: CharStream) -> TargetType? {
+  func parse(stream: CharStream) -> Target? {
     if let (a,b) = helper.parse(stream) {
       return b
     }

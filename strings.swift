@@ -10,9 +10,9 @@ class Constant<T> : Parser {
     self.str = "\(value)"
   }
 
-  typealias TargetType = T
+  typealias Target = T
 
-  func parse(stream: CharStream) -> TargetType? {
+  func parse(stream: CharStream) -> Target? {
     if stream.startsWith(str) {
       stream.advance(countElements(str))
       return value
@@ -34,13 +34,13 @@ func constchar(ch:Character) -> Constant<Character> {
 class Satisfy : Parser {
   let condition: Character -> Bool
 
-  typealias TargetType = Character
+  typealias Target = Character
 
   init(condition:Character -> Bool) {
     self.condition = condition
   }
 
-  func parse(stream:CharStream) -> TargetType? {
+  func parse(stream:CharStream) -> Target? {
     if let ch = stream.head {
       if condition(ch) {
         stream.advance(1)
@@ -57,17 +57,17 @@ func satisfy(condition:Character->Bool) -> Satisfy {
 
 
 // Helpful versions which turn arrays of Characters into Strings
-func arrayToString<T:Parser where T.TargetType==Array<Character>>
+func arrayToString<T:Parser where T.Target==Array<Character>>
   (parser: T) -> Pipe<T, String> {
   return pipe(parser, {return String($0)})
 }
 
-func manychars<T:Parser where T.TargetType==Character>
+func manychars<T:Parser where T.Target==Character>
   (item:T) -> Pipe<Many<T>, String> {
   return arrayToString(many(item))
 }
 
-func many1chars<T:Parser where T.TargetType==Character>
+func many1chars<T:Parser where T.Target==Character>
   (item:T) -> Pipe<Many<T>, String> {
   return arrayToString(many1(item))
 }

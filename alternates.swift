@@ -1,5 +1,5 @@
-class Alternates<T1:Parser, T2:Parser where T1.TargetType==T2.TargetType> : Parser {
-  typealias TargetType = T1.TargetType
+class Alternates<T1:Parser, T2:Parser where T1.Target==T2.Target> : Parser {
+  typealias Target = T1.Target
 
   let first : T1
   let second: T2
@@ -9,7 +9,7 @@ class Alternates<T1:Parser, T2:Parser where T1.TargetType==T2.TargetType> : Pars
     self.second = second
   }
 
-  func parse(stream:CharStream) -> TargetType? {
+  func parse(stream:CharStream) -> Target? {
     if let fst = first.parse(stream) {
       return fst
     }
@@ -20,7 +20,7 @@ class Alternates<T1:Parser, T2:Parser where T1.TargetType==T2.TargetType> : Pars
   }
 }
 
-func | <T1:Parser, T2:Parser where T1.TargetType==T2.TargetType>(
+func | <T1:Parser, T2:Parser where T1.Target==T2.Target>(
     first : T1,
     second: T2) ->
     Alternates<T1,T2> {

@@ -1,5 +1,5 @@
 class LateBound<T>: Parser {
-  typealias TargetType = T
+  typealias Target = T
   typealias ParseFunc  = CharStream -> T?
 
   var inner: ParseFunc?
