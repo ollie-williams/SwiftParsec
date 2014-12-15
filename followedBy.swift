@@ -59,17 +59,17 @@ class FollowedBySecond<T1 : Parser, T2 : Parser> : Parser {
 
 
 
-infix operator >> {associativity left precedence 140}
-func >><T1: Parser, T2: Parser>(first: T1, second: T2) -> FollowedBy<T1,T2> {
+infix operator ~>~ {associativity left precedence 140}
+func ~>~ <T1: Parser, T2: Parser>(first: T1, second: T2) -> FollowedBy<T1,T2> {
   return FollowedBy(first: first, second: second)
 }
 
-infix operator ->> {associativity left precedence 140}
-func ->><T1: Parser, T2: Parser>(first: T1, second: T2) -> FollowedByFirst<T1,T2> {
+infix operator ~> {associativity left precedence 140}
+func ~> <T1: Parser, T2: Parser>(first: T1, second: T2) -> FollowedByFirst<T1,T2> {
   return FollowedByFirst(first: first, second: second)
 }
 
-infix operator >>- {associativity left precedence 140}
-func >>-<T1: Parser, T2: Parser>(first: T1, second: T2) -> FollowedBySecond<T1,T2> {
+infix operator >~ {associativity left precedence 140}
+func >~ <T1: Parser, T2: Parser>(first: T1, second: T2) -> FollowedBySecond<T1,T2> {
   return FollowedBySecond(first: first, second: second)
 }

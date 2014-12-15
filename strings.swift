@@ -73,9 +73,9 @@ func many1chars<T:Parser where T.Target==Character>
 }
 
 // Overloaded followed-by operators
-func >>- <T: Parser>(first: String, second: T) -> FollowedBySecond<Constant<String>,T> {
+func >~ <T: Parser>(first: String, second: T) -> FollowedBySecond<Constant<String>,T> {
   return FollowedBySecond(first: const(first), second: second)
 }
-func ->> <T: Parser>(first: T, second: String) -> FollowedByFirst<T,Constant<String>> {
+func ~> <T: Parser>(first: T, second: String) -> FollowedByFirst<T,Constant<String>> {
   return FollowedByFirst(first: first, second: const(second))
 }
