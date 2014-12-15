@@ -22,6 +22,11 @@ func pipe<T:Parser, V>(inner: T, fn: T.Target -> V) -> Pipe<T,V> {
   return Pipe(inner:inner, fn:fn)
 }
 
+infix operator |> {associativity left precedence 130}
+func |> <T: Parser, V>(inner: T, fn: T.Target -> V) -> Pipe<T,V> {
+  return pipe(inner, fn)
+}
+
 
 class Pipe2<T1:Parser, T2:Parser, V> : Parser {
   typealias Target = V
