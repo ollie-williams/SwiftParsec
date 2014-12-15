@@ -9,6 +9,11 @@ func parse<T:Parser>(parser:T, string:String) -> T.Target? {
   return parser.parse(stream)
 }
 
+let intp = Integer()
+lnprint(parse(intp, "-4379wigblksl"))
+lnprint(parse(intp, "925 fhsjdkfh"))
+lnprint(parse(intp, "fhsjdkfh"))
+
 let source = "HelloWorld"
 let cnst1 = const("Hello")
 let cnst2 = const("World")
@@ -21,10 +26,10 @@ let parser2 = pipe(parser, function)
 let result2 = parse(parser2, source)
 lnprint(result2)
 
-let result3 = 
+let result3 =
   parse(
         many(const("Hello")) >~ const("World"),
-        "HelloHelloHelloWorld" 
+        "HelloHelloHelloWorld"
     )
 lnprint(result3)
 
@@ -35,7 +40,7 @@ class Expr {
   init(symbol:String, children:[Expr]) {
     self.symbol = symbol
     self.children = children
-  }  
+  }
 
   class func MakeFn(symbol:String, children:[Expr]) -> Expr {
     return Expr(symbol:symbol, children:children)
@@ -73,11 +78,10 @@ func cStyle(expr:Expr) -> String {
   var args = cStyle(expr.children[0])
   for i in 1..<expr.children.count {
     args = args + ", " + cStyle(expr.children[i])
-  }    
+  }
   return "\(expr.symbol)(\(args))"
 }
 
 let sexpr = "(f (add a (g b)) a (g c))"
 let result6 = parse(expr, sexpr)
 println("\(sexpr) = \(cStyle(result6!))")
-

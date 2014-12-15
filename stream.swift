@@ -35,6 +35,13 @@ class CharStream {
     return str.substringFromIndex(pos).hasPrefix(query)
   }
 
+  func startsWithRegex(pattern: String) -> String? {
+    if let range = str.rangeOfString(pattern, options: .RegularExpressionSearch, range: nil, locale: nil) {
+      return str.substringWithRange(range)
+    }
+    return nil
+  }
+
   func advance(count: Int) -> Void {
     pos = Swift.advance(pos, count)
   }

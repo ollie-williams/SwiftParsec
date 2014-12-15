@@ -3,6 +3,7 @@ SRCS=\
 	parser.swift \
 	late.swift \
 	strings.swift \
+	numbers.swift \
 	followedBy.swift \
 	pipe.swift \
 	repeats.swift \
