@@ -48,8 +48,18 @@ func idChar(c:Character) -> Bool {
 let identifier = many1chars(satisfy(idChar)) ~> skip
 let leaf = identifier |> Expr.MakeLeaf
 
-let opp = OperatorPrecedence<Expr>()
+let infixFormat = const("+") ~> skip
+let opp = OperatorPrecedence<Expr>(infixFormat.parse)
 opp.term = leaf.parse
+
+func ifxAdd(opp:OperatorPrecedence<Expr>, stream:CharStream, left:Expr) -> Expr? {
+  if let right = opp.parse(stream) {
+    return Expr.MakeFn("+", children:[left, right])
+  }
+  return nil
+}
+opp.addInfix("+", ifx:Infix(impl:ifxAdd))
+
 lnprint(cStyle(parse(opp, "foo")!))
 lnprint(cStyle(parse(opp, "foo + bar")!))
 
