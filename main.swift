@@ -52,16 +52,32 @@ let infixFormat = const("+") ~> skip
 let opp = OperatorPrecedence<Expr>(infixFormat.parse)
 opp.term = leaf.parse
 
-func ifxAdd(opp:OperatorPrecedence<Expr>, stream:CharStream, left:Expr) -> Expr? {
-  if let right = opp.parse(stream) {
-    return Expr.MakeFn("+", children:[left, right])
+class ExprOp {
+
+  let symb:String
+
+  init(symb:String) {
+    self.symb = symb
   }
-  return nil
+
+  func parse(opp:OperatorPrecedence<Expr>, stream:CharStream, left:Expr) -> Expr? {
+    if let right = opp.parse(stream) {
+      return Expr.MakeFn(symb, children:[left, right])
+    }
+    return nil
+  }
+
+  class func makeInfix(symb:String, _ ass:Associativity, _ prec:Int) -> Infix<Expr> {
+    let inst = ExprOp(symb:symb)
+    return Infix(ass:ass, prec:prec, impl:inst.parse)
+  }
 }
-opp.addInfix("+", ifx:Infix(impl:ifxAdd))
+
+opp.addInfix("+", ExprOp.makeInfix("+", .Left, 60))
 
 lnprint(cStyle(parse(opp, "foo")!))
 lnprint(cStyle(parse(opp, "foo + bar")!))
+lnprint(cStyle(parse(opp, "foo + bar + abc")!))
 
 
 

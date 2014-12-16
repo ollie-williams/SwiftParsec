@@ -2,16 +2,26 @@ protocol Prefix {
   func parse<T>(OperatorPrecedence<T>, CharStream) -> T?
 }
 
+enum Associativity {
+  case Left
+  case Right
+}
+
 class Infix<T> {
   typealias Impl = (OperatorPrecedence<T>, CharStream, T) -> T?
+
+  let ass: Associativity
+  let prec: Int
   let impl: Impl
 
-  init(impl: Impl) {
+  init(ass:Associativity, prec:Int, impl:Impl) {
+    self.ass = ass
+    self.prec = prec
     self.impl = impl
   }
 
-  func parse(op:OperatorPrecedence<T>, stream:CharStream, left:T) -> T? {
-    return impl(op, stream, left)
+  func parse(op:OperatorPrecedence<T>, stream:CharStream, lft:T) -> T? {
+    return impl(op, stream, lft)
   }
 }
 
@@ -19,7 +29,6 @@ class Infix<T> {
 class OperatorPrecedence<T> : Parser {
   typealias Target = T
   typealias ParseFunc  = CharStream -> T?
-
 
   let infixFormat: CharStream -> String?
 
@@ -33,15 +42,14 @@ class OperatorPrecedence<T> : Parser {
   }
 
   func parse(stream:CharStream) -> T? {
-    // Get first term
-    let left = Term(stream)!
+    let lft = Term(stream)!
     if let ifx = GetInfix(stream) {
-      return ifx.parse(self, stream:stream, left:left)
+      return ifx.parse(self, stream:stream, lft:lft)
     }
-    return left
+    return lft
   }
 
-  func addInfix(name:String, ifx:Infix<T>) {
+  func addInfix(name:String, _ ifx:Infix<T>) {
     infixParsers[name] = ifx
   }
 
