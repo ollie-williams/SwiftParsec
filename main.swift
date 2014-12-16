@@ -1,5 +1,3 @@
-
-
 func lnprint<T>(val:T, file: String = __FILE__, line: Int = __LINE__) -> Void {
   println("\(file)(\(line)): \(val)")
 }

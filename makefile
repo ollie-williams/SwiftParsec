@@ -1,6 +1,7 @@
 SRCS=\
 	stream.swift \
 	parser.swift \
+	infix.swift \
 	late.swift \
 	strings.swift \
 	numbers.swift \
@@ -8,7 +9,6 @@ SRCS=\
 	pipe.swift \
 	repeats.swift \
 	alternates.swift \
-	infix.swift \
 	main.swift
 
 TARGET=octopus
