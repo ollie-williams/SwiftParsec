@@ -7,30 +7,6 @@ func parse<T:Parser>(parser:T, string:String) -> T.Target? {
   return parser.parse(stream)
 }
 
-let intp = Integer()
-lnprint(parse(intp, "-4379wigblksl"))
-lnprint(parse(intp, "925 fhsjdkfh"))
-lnprint(parse(intp, "fhsjdkfh"))
-
-let source = "HelloWorld"
-let cnst1 = const("Hello")
-let cnst2 = const("World")
-let parser = cnst1 >~ cnst2
-let result = parse(parser, source)
-lnprint(result)
-
-func function(s:String) -> Int { return countElements(s) }
-let parser2 = pipe(parser, function)
-let result2 = parse(parser2, source)
-lnprint(result2)
-
-let result3 =
-  parse(
-        many(const("Hello")) >~ const("World"),
-        "HelloHelloHelloWorld"
-    )
-lnprint(result3)
-
 class Expr {
   let symbol  : String
   let children: [Expr]
@@ -49,26 +25,6 @@ class Expr {
   }
 }
 
-let skip = manychars(constchar(" "))
-func idChar(c:Character) -> Bool {
-  switch c {
-    case "(", ")", " ":
-      return false
-    default:
-      return true
-  }
-}
-let identifier = many1chars(satisfy(idChar)) ~> skip
-
-let leaf = identifier |> Expr.MakeLeaf
-
-var expr = LateBound<Expr>()
-let oparen = const("(") ~> skip
-let cparen = const(")") ~> skip
-let fnCall = oparen >~ pipe2(identifier, many(expr), Expr.MakeFn) ~> cparen
-let choice = fnCall | leaf
-expr.inner = choice.parse
-
 func cStyle(expr:Expr) -> String {
   if expr.children.count == 0 {
     return expr.symbol
@@ -79,6 +35,34 @@ func cStyle(expr:Expr) -> String {
   }
   return "\(expr.symbol)(\(args))"
 }
+
+let skip = manychars(constchar(" "))
+func idChar(c:Character) -> Bool {
+  switch c {
+    case "(", ")", " ":
+      return false
+    default:
+      return true
+  }
+}
+let identifier = many1chars(satisfy(idChar)) ~> skip
+let leaf = identifier |> Expr.MakeLeaf
+
+let opp = OperatorPrecedence<Expr>()
+opp.term = leaf.parse
+lnprint(cStyle(parse(opp, "foo")!))
+lnprint(cStyle(parse(opp, "foo + bar")!))
+
+
+
+var expr = LateBound<Expr>()
+let oparen = const("(") ~> skip
+let cparen = const(")") ~> skip
+let fnCall = oparen >~ pipe2(identifier, many(expr), Expr.MakeFn) ~> cparen
+let choice = fnCall | leaf
+expr.inner = choice.parse
+
+
 
 let sexpr = "(f (add a (g b)) a (g c))"
 let result6 = parse(expr, sexpr)

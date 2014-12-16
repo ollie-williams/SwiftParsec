@@ -12,9 +12,11 @@ class OperatorPrecedence<T> : Parser {
   typealias ParseFunc  = CharStream -> T?
 
   var term: ParseFunc?
+  var infixParsers: [String:Infix]
 
   init() {
     term = nil
+    infixParsers = [:]
   }
 
   func parse(stream:CharStream) -> T? {
