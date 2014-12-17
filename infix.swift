@@ -30,19 +30,46 @@ class Infix<T> {
   }
 }
 
+private class OpSet<V> {
+  let pattern: CharStream -> String?
+  var dict:    [String:V]
+  var next:    V?
+
+  init(pattern:CharStream -> String?) {
+    self.pattern = pattern
+    self.dict = [:]
+    self.next = nil
+  }
+
+  func get(stream:CharStream) -> V? {
+    if let try = next {
+      next = nil
+      return try
+    }
+    if let str = pattern(stream) {
+      return dict[str]
+    }
+    return nil
+  }
+
+  func putBack(val:V) -> Void {
+    assert(next == nil, "Expected cache to be empty.")
+    next = val
+  }
+}
+
 class OperatorPrecedence<T> : Parser {
   typealias Target = T
   typealias ParseFunc  = CharStream -> T?
 
-  let opFormat: CharStream -> String?
-
+  private let infixOps:OpSet<Infix<T>>
+  private let prefixOps:OpSet<Prefix<T>>
   var term: ParseFunc?
-  private var infixParsers: [String:Infix<T>]
 
   init(opFormat: CharStream -> String?) {
-    self.opFormat = opFormat
+    infixOps = OpSet<Infix<T>>(opFormat)
+    prefixOps = OpSet<Prefix<T>>(opFormat)
     term = nil
-    infixParsers = [:]
   }
 
   func parse(stream:CharStream) -> T? {
@@ -54,11 +81,11 @@ class OperatorPrecedence<T> : Parser {
     if ass == .Right {
       prec = prec - 1
     }
-    while let ifx = getInfix(stream) {
+    while let ifx = infixOps.get(stream) {
       if ifx.prec > prec {
         lft = ifx.parse(self, stream, lft)!
       } else {
-        putBack(ifx)
+        infixOps.putBack(ifx)
         break
       }
     }
@@ -66,29 +93,7 @@ class OperatorPrecedence<T> : Parser {
   }
 
   func addInfix(name:String, _ ifx:Infix<T>) {
-    infixParsers[name] = ifx
-  }
-
-  var next:Infix<T>?
-
-  private func getInfix(stream:CharStream) -> Infix<T>? {
-    if let ifx = next {
-      next = nil
-      return ifx
-    }
-    if let str = opFormat(stream) {
-      return infixParsers[str]
-    }
-    return nil
-  }
-
-  private func putBack(ifx:Infix<T>) -> Void {
-    assert(next == nil, "Expected cache to be empty.")
-    next = ifx
-  }
-
-  private func getPrefix(stream:CharStream) -> Prefix<T>? {
-    return nil
+    infixOps.dict[name] = ifx
   }
 
   private func Term(stream:CharStream) -> T? {
