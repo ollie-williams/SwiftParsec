@@ -48,8 +48,8 @@ func idChar(c:Character) -> Bool {
 let identifier = many1chars(satisfy(idChar)) ~> skip
 let leaf = identifier |> Expr.MakeLeaf
 
-let infixFormat = (regex("[+*!?]")) ~> skip
-let opp = OperatorPrecedence<Expr>(infixFormat.parse)
+let opFormat = (regex("[+*!?()]")) ~> skip
+let opp = OperatorPrecedence<Expr>(opFormat.parse)
 opp.term = leaf.parse
 
 class ExprOp {
@@ -79,10 +79,13 @@ class ExprOp {
   }
 }
 
+func parens(arg:Expr) -> Expr { return arg }
+
 opp.addInfix("+", ExprOp.makeInfix("+", .Left, 60))
 opp.addInfix("*", ExprOp.makeInfix("*", .Right, 70))
 opp.addPrefix("!", ExprOp.makePrefix("!", 200))
 opp.addPrefix("?", ExprOp.makePrefix("?", 50))
+opp.addPrefix("(", Prefix(1, parens) )
 
 lnprint(cStyle(parse(opp, "foo")!))
 lnprint(cStyle(parse(opp, "foo + bar")!))

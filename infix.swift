@@ -10,7 +10,7 @@ class Prefix<T> {
   }
 
   func parse(opp:OperatorPrecedence<T>, _ stream:CharStream) -> T? {
-    if let arg = opp.parse(stream, prec, .Left) {
+    if let arg = opp.parse(stream, prec) {
       return build(arg)
     }
     return nil
@@ -20,6 +20,7 @@ class Prefix<T> {
 enum Associativity {
   case Left
   case Right
+  case Postfix
 }
 
 class Infix<T> {
@@ -36,10 +37,21 @@ class Infix<T> {
   }
 
   func parse(opp:OperatorPrecedence<T>, _ stream:CharStream, _ lft:T) -> T? {
-    if let rgt = opp.parse(stream, prec, ass) {
-      return build(lft, rgt)
-    }
-    return nil
+    switch ass {
+      case .Postfix:
+        return build(lft,lft)
+      case .Left:
+        if let rgt = opp.parse(stream, prec) {
+          return build(lft, rgt)
+        }
+        break
+      case .Right:
+        if let rgt = opp.parse(stream, prec-1) {
+          return build(lft, rgt)
+        }
+        break;
+      }
+      return nil
   }
 }
 
@@ -86,7 +98,7 @@ class OperatorPrecedence<T> : Parser {
   }
 
   func parse(stream:CharStream) -> T? {
-    return parse(stream, 0, .Left)
+    return parse(stream, 0)
   }
 
   func parseStart(stream:CharStream) -> T? {
@@ -99,12 +111,8 @@ class OperatorPrecedence<T> : Parser {
     return nil
   }
 
-  func parse(stream:CharStream, var _ prec:Int, _ ass:Associativity) -> T? {
+  func parse(stream:CharStream, _ prec:Int) -> T? {
     var lft = parseStart(stream)!
-
-    if ass == .Right {
-      prec = prec - 1
-    }
 
     while let ifx = infixOps.get(stream) {
       if ifx.prec > prec {
