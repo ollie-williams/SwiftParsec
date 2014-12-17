@@ -8,23 +8,25 @@ enum Associativity {
 }
 
 class Infix<T> {
-  typealias Impl = (OperatorPrecedence<T>, CharStream, T) -> T?
+  typealias Builder = (T, T) -> T?
 
   let ass: Associativity
   let prec: Int
-  let impl: Impl
+  let build: Builder
 
-  init(ass:Associativity, prec:Int, impl:Impl) {
+  init(ass:Associativity, _ prec:Int, _ build:Builder) {
     self.ass = ass
     self.prec = prec
-    self.impl = impl
+    self.build = build
   }
 
-  func parse(op:OperatorPrecedence<T>, stream:CharStream, lft:T) -> T? {
-    return impl(op, stream, lft)
+  func parse(opp:OperatorPrecedence<T>, _ stream:CharStream, _ lft:T) -> T? {
+    if let rgt = opp.parse(stream, prec, ass) {
+      return build(lft, rgt)
+    }
+    return nil
   }
 }
-
 
 class OperatorPrecedence<T> : Parser {
   typealias Target = T
@@ -42,9 +44,18 @@ class OperatorPrecedence<T> : Parser {
   }
 
   func parse(stream:CharStream) -> T? {
-    let lft = Term(stream)!
-    if let ifx = GetInfix(stream) {
-      return ifx.parse(self, stream:stream, lft:lft)
+    return parse(stream, 0, .Left)
+  }
+
+  func parse(stream:CharStream, _ prec:Int, _ ass:Associativity) -> T? {
+    var lft = Term(stream)!
+    while let ifx = GetInfix(stream) {
+      if ifx.prec > prec {
+        lft = ifx.parse(self, stream, lft)!
+      } else {
+        putBack(ifx)
+        break
+      }
     }
     return lft
   }
@@ -53,11 +64,22 @@ class OperatorPrecedence<T> : Parser {
     infixParsers[name] = ifx
   }
 
+  var next:Infix<T>?
+
   private func GetInfix(stream:CharStream) -> Infix<T>? {
+    if let ifx = next {
+      next = nil
+      return ifx
+    }
     if let str = infixFormat(stream) {
       return infixParsers[str]
     }
     return nil
+  }
+
+  private func putBack(ifx:Infix<T>) -> Void {
+    assert(next == nil, "Expected cache to be empty.")
+    next = ifx
   }
 
   private func GetPrefix(stream:CharStream) -> Prefix? {
