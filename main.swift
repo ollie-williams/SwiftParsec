@@ -64,29 +64,32 @@ class ExprOp {
   }
 }
 
-let opFormat = (regex("[+*!?()]")) ~> skip
+let opFormat = (regex("[+*!?]")) ~> skip
 let opp = OperatorPrecedence<Expr>(opFormat.parse)
 
 opp.addOperator("+", .LeftInfix(ExprOp("+").binary, 60))
 opp.addOperator("*", .RightInfix(ExprOp("*").binary, 70))
 opp.addPrefix("!", Prefix(ExprOp("!").unary, 200))
-opp.addPrefix("?", Prefix(ExprOp("?").unary, 50))  
+opp.addPrefix("?", Prefix(ExprOp("?").unary, 50))
 
 let oparen = const("(") ~> skip
 let cparen = const(")") ~> skip
 
-
-opp.term = leaf.parse// | oparen >~ opp ~> cparen
+let brackets = oparen >~ opp ~> cparen
+let termParser  = leaf | brackets
+opp.term = termParser.parse
 
 lnprint(cStyle(parse(opp, "foo")!))
 lnprint(cStyle(parse(opp, "foo + bar")!))
 lnprint(cStyle(parse(opp, "foo + bar + abc")!))
 lnprint(cStyle(parse(opp, "foo * bar + abc")!))
+lnprint(cStyle(parse(opp, "foo * (bar + abc)")!))
 lnprint(cStyle(parse(opp, "foo + bar * abc")!))
 lnprint(cStyle(parse(opp, "foo * bar * abc")!))
 lnprint(cStyle(parse(opp, "!foo")!))
 lnprint(cStyle(parse(opp, "!?foo")!))
 lnprint(cStyle(parse(opp, "!foo + bar")!))
+lnprint(cStyle(parse(opp, "!(foo + bar)")!))
 lnprint(cStyle(parse(opp, "?foo + bar")!))
 
 
