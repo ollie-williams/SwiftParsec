@@ -71,13 +71,14 @@ class ExprOp {
 }
 
 opp.addInfix("+", ExprOp.makeInfix("+", .Left, 60))
-opp.addInfix("*", ExprOp.makeInfix("*", .Left, 70))
+opp.addInfix("*", ExprOp.makeInfix("*", .Right, 70))
 
 lnprint(cStyle(parse(opp, "foo")!))
 lnprint(cStyle(parse(opp, "foo + bar")!))
 lnprint(cStyle(parse(opp, "foo + bar + abc")!))
 lnprint(cStyle(parse(opp, "foo * bar + abc")!))
 lnprint(cStyle(parse(opp, "foo + bar * abc")!))
+lnprint(cStyle(parse(opp, "foo * bar * abc")!))
 
 
 

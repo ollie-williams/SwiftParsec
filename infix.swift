@@ -47,8 +47,11 @@ class OperatorPrecedence<T> : Parser {
     return parse(stream, 0, .Left)
   }
 
-  func parse(stream:CharStream, _ prec:Int, _ ass:Associativity) -> T? {
+  func parse(stream:CharStream, var _ prec:Int, _ ass:Associativity) -> T? {
     var lft = Term(stream)!
+    if ass == .Right {
+      prec = prec - 1
+    }
     while let ifx = GetInfix(stream) {
       if ifx.prec > prec {
         lft = ifx.parse(self, stream, lft)!
