@@ -1,5 +1,18 @@
 class Prefix<T> {
+  typealias Builder = T -> T?
+
+  let prec:  Int
+  let build: Builder
+
+  init(_ prec:Int, _ build:Builder) {
+    self.prec = prec
+    self.build = build
+  }
+
   func parse(opp:OperatorPrecedence<T>, _ stream:CharStream) -> T? {
+    if let arg = opp.parse(stream, prec, .Left) {
+      return build(arg)
+    }
     return nil
   }
 }
@@ -12,11 +25,11 @@ enum Associativity {
 class Infix<T> {
   typealias Builder = (T, T) -> T?
 
-  let ass: Associativity
-  let prec: Int
+  let ass:   Associativity
+  let prec:  Int
   let build: Builder
 
-  init(ass:Associativity, _ prec:Int, _ build:Builder) {
+  init(_ ass:Associativity, _ prec:Int, _ build:Builder) {
     self.ass = ass
     self.prec = prec
     self.build = build
@@ -76,11 +89,23 @@ class OperatorPrecedence<T> : Parser {
     return parse(stream, 0, .Left)
   }
 
+  func parseStart(stream:CharStream) -> T? {
+    if let pfx = prefixOps.get(stream) {
+      return pfx.parse(self, stream)
+    }
+    if let t = Term(stream) {
+      return t
+    }
+    return nil
+  }
+
   func parse(stream:CharStream, var _ prec:Int, _ ass:Associativity) -> T? {
-    var lft = Term(stream)!
+    var lft = parseStart(stream)!
+
     if ass == .Right {
       prec = prec - 1
     }
+
     while let ifx = infixOps.get(stream) {
       if ifx.prec > prec {
         lft = ifx.parse(self, stream, lft)!
@@ -94,6 +119,10 @@ class OperatorPrecedence<T> : Parser {
 
   func addInfix(name:String, _ ifx:Infix<T>) {
     infixOps.dict[name] = ifx
+  }
+
+  func addPrefix(name:String, _ pfx:Prefix<T>) {
+    prefixOps.dict[name] = pfx
   }
 
   private func Term(stream:CharStream) -> T? {

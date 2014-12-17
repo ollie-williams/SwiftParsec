@@ -39,7 +39,7 @@ func cStyle(expr:Expr) -> String {
 let skip = manychars(const(" "))
 func idChar(c:Character) -> Bool {
   switch c {
-    case "(", ")", " ":
+    case "(", ")", " ", "!", "?", "+", "*":
       return false
     default:
       return true
@@ -48,7 +48,7 @@ func idChar(c:Character) -> Bool {
 let identifier = many1chars(satisfy(idChar)) ~> skip
 let leaf = identifier |> Expr.MakeLeaf
 
-let infixFormat = (regex("[+*]")) ~> skip
+let infixFormat = (regex("[+*!?]")) ~> skip
 let opp = OperatorPrecedence<Expr>(infixFormat.parse)
 opp.term = leaf.parse
 
@@ -60,18 +60,29 @@ class ExprOp {
     self.symb = symb
   }
 
-  func build(left:Expr, _ right:Expr) -> Expr {
+  func binary(left:Expr, _ right:Expr) -> Expr {
     return Expr.MakeFn(symb, children:[left, right])
+  }
+
+  func unary(arg:Expr) -> Expr {
+    return Expr.MakeFn(symb, children:[arg])
   }
 
   class func makeInfix(symb:String, _ ass:Associativity, _ prec:Int) -> Infix<Expr> {
     let inst = ExprOp(symb:symb)
-    return Infix(ass:ass, prec, inst.build)
+    return Infix(ass, prec, inst.binary)
+  }
+
+  class func makePrefix(symb:String, _ prec:Int) -> Prefix<Expr> {
+    let inst = ExprOp(symb:symb)
+    return Prefix(prec, inst.unary)
   }
 }
 
 opp.addInfix("+", ExprOp.makeInfix("+", .Left, 60))
 opp.addInfix("*", ExprOp.makeInfix("*", .Right, 70))
+opp.addPrefix("!", ExprOp.makePrefix("!", 200))
+opp.addPrefix("?", ExprOp.makePrefix("?", 50))
 
 lnprint(cStyle(parse(opp, "foo")!))
 lnprint(cStyle(parse(opp, "foo + bar")!))
@@ -79,6 +90,10 @@ lnprint(cStyle(parse(opp, "foo + bar + abc")!))
 lnprint(cStyle(parse(opp, "foo * bar + abc")!))
 lnprint(cStyle(parse(opp, "foo + bar * abc")!))
 lnprint(cStyle(parse(opp, "foo * bar * abc")!))
+lnprint(cStyle(parse(opp, "!foo")!))
+lnprint(cStyle(parse(opp, "!?foo")!))
+lnprint(cStyle(parse(opp, "!foo + bar")!))
+lnprint(cStyle(parse(opp, "?foo + bar")!))
 
 
 
