@@ -36,7 +36,11 @@ class CharStream {
   }
 
   func startsWithRegex(pattern: String) -> String? {
-    if let range = str.rangeOfString(pattern, options: .RegularExpressionSearch, range: nil, locale: nil) {
+    if let range = str.rangeOfString(
+      pattern,
+      options: .RegularExpressionSearch | .AnchoredSearch,
+      range: pos..<str.endIndex, 
+      locale: nil) {
       return str.substringWithRange(range)
     }
     return nil

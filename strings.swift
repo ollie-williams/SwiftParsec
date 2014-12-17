@@ -22,14 +22,31 @@ class Constant<T> : Parser {
   }
 }
 
-func const(str: String) -> Constant<String> {
-  return Constant(value:str)
+func const<T>(value:T) -> Constant<T> {
+  return Constant(value:value)
 }
 
-func constchar(ch:Character) -> Constant<Character> {
-  return Constant(value:ch)
+class Regex : Parser {
+  typealias Target = String
+
+  let pattern:String
+
+  init(pattern:String) {
+    self.pattern = pattern
+  }
+
+  func parse(stream:CharStream) -> Target? {
+    if let match = stream.startsWithRegex(pattern) {
+      stream.advance(countElements(match))
+      return match
+    }
+    return nil
+  }
 }
 
+func regex(pattern:String) -> Regex {
+  return Regex(pattern:pattern)
+}
 
 class Satisfy : Parser {
   let condition: Character -> Bool
