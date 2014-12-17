@@ -48,15 +48,10 @@ func idChar(c:Character) -> Bool {
 let identifier = many1chars(satisfy(idChar)) ~> skip
 let leaf = identifier |> Expr.MakeLeaf
 
-let opFormat = (regex("[+*!?()]")) ~> skip
-let opp = OperatorPrecedence<Expr>(opFormat.parse)
-opp.term = leaf.parse
-
 class ExprOp {
-
   let symb:String
 
-  init(symb:String) {
+  init(_ symb:String) {
     self.symb = symb
   }
 
@@ -67,25 +62,21 @@ class ExprOp {
   func unary(arg:Expr) -> Expr {
     return Expr.MakeFn(symb, children:[arg])
   }
-
-  class func makeInfix(symb:String, _ ass:Associativity, _ prec:Int) -> Infix<Expr> {
-    let inst = ExprOp(symb:symb)
-    return Infix(ass, prec, inst.binary)
-  }
-
-  class func makePrefix(symb:String, _ prec:Int) -> Prefix<Expr> {
-    let inst = ExprOp(symb:symb)
-    return Prefix(prec, inst.unary)
-  }
 }
 
-func parens(arg:Expr) -> Expr { return arg }
+let opFormat = (regex("[+*!?()]")) ~> skip
+let opp = OperatorPrecedence<Expr>(opFormat.parse)
 
-opp.addInfix("+", ExprOp.makeInfix("+", .Left, 60))
-opp.addInfix("*", ExprOp.makeInfix("*", .Right, 70))
-opp.addPrefix("!", ExprOp.makePrefix("!", 200))
-opp.addPrefix("?", ExprOp.makePrefix("?", 50))
-opp.addPrefix("(", Prefix(1, parens) )
+opp.addOperator("+", .LeftInfix(ExprOp("+").binary, 60))
+opp.addOperator("*", .RightInfix(ExprOp("*").binary, 70))
+opp.addPrefix("!", Prefix(ExprOp("!").unary, 200))
+opp.addPrefix("?", Prefix(ExprOp("?").unary, 50))  
+
+let oparen = const("(") ~> skip
+let cparen = const(")") ~> skip
+
+
+opp.term = leaf.parse// | oparen >~ opp ~> cparen
 
 lnprint(cStyle(parse(opp, "foo")!))
 lnprint(cStyle(parse(opp, "foo + bar")!))
@@ -100,9 +91,9 @@ lnprint(cStyle(parse(opp, "?foo + bar")!))
 
 
 
+
 var expr = LateBound<Expr>()
-let oparen = const("(") ~> skip
-let cparen = const(")") ~> skip
+
 let fnCall = oparen >~ pipe2(identifier, many(expr), Expr.MakeFn) ~> cparen
 let choice = fnCall | leaf
 expr.inner = choice.parse

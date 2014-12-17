@@ -4,9 +4,9 @@ class Prefix<T> {
   let prec:  Int
   let build: Builder
 
-  init(_ prec:Int, _ build:Builder) {
-    self.prec = prec
+  init(_ build:Builder, _ prec:Int) {
     self.build = build
+    self.prec = prec
   }
 
   func parse(opp:OperatorPrecedence<T>, _ stream:CharStream) -> T? {
@@ -17,41 +17,43 @@ class Prefix<T> {
   }
 }
 
-enum Associativity {
-  case Left
-  case Right
-  case Postfix
-}
 
-class Infix<T> {
-  typealias Builder = (T, T) -> T?
+enum OperatorHandler<T> {
+  typealias Binary = (T, T) -> T?
+  typealias Unary = T -> T?
 
-  let ass:   Associativity
-  let prec:  Int
-  let build: Builder
-
-  init(_ ass:Associativity, _ prec:Int, _ build:Builder) {
-    self.ass = ass
-    self.prec = prec
-    self.build = build
-  }
+  case LeftInfix(Binary, Int)
+  case RightInfix(Binary, Int)
+  case Postfix(Unary, Int)
 
   func parse(opp:OperatorPrecedence<T>, _ stream:CharStream, _ lft:T) -> T? {
-    switch ass {
-      case .Postfix:
-        return build(lft,lft)
-      case .Left:
+    switch self {
+      case LeftInfix(let binary, let prec):
         if let rgt = opp.parse(stream, prec) {
-          return build(lft, rgt)
+          return binary(lft, rgt)
         }
         break
-      case .Right:
+
+      case RightInfix(let binary, let prec):
         if let rgt = opp.parse(stream, prec-1) {
-          return build(lft, rgt)
+          return binary(lft, rgt)
         }
-        break;
+        break
+
+      case Postfix(let unary, _):
+        return unary(lft)
+    }
+    return nil
+  }
+
+  var precedence:Int {
+    get {
+      switch self {
+        case LeftInfix(_, let prec): return prec
+        case RightInfix(_, let prec): return prec
+        case Postfix(_, let prec): return prec
       }
-      return nil
+    }
   }
 }
 
@@ -87,12 +89,12 @@ class OperatorPrecedence<T> : Parser {
   typealias Target = T
   typealias ParseFunc  = CharStream -> T?
 
-  private let infixOps:OpSet<Infix<T>>
+  private let infixOps:OpSet<OperatorHandler<T>>
   private let prefixOps:OpSet<Prefix<T>>
   var term: ParseFunc?
 
   init(opFormat: CharStream -> String?) {
-    infixOps = OpSet<Infix<T>>(opFormat)
+    infixOps = OpSet<OperatorHandler<T>>(opFormat)
     prefixOps = OpSet<Prefix<T>>(opFormat)
     term = nil
   }
@@ -115,7 +117,7 @@ class OperatorPrecedence<T> : Parser {
     var lft = parseStart(stream)!
 
     while let ifx = infixOps.get(stream) {
-      if ifx.prec > prec {
+      if ifx.precedence > prec {
         lft = ifx.parse(self, stream, lft)!
       } else {
         infixOps.putBack(ifx)
@@ -125,8 +127,8 @@ class OperatorPrecedence<T> : Parser {
     return lft
   }
 
-  func addInfix(name:String, _ ifx:Infix<T>) {
-    infixOps.dict[name] = ifx
+  func addOperator(name:String, _ op:OperatorHandler<T>) {
+    infixOps.dict[name] = op
   }
 
   func addPrefix(name:String, _ pfx:Prefix<T>) {
