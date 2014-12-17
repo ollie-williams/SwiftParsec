@@ -39,7 +39,7 @@ func cStyle(expr:Expr) -> String {
 let skip = manychars(const(" "))
 func idChar(c:Character) -> Bool {
   switch c {
-    case "(", ")", " ", "!", "?", "+", "*":
+    case "(", ")", " ", "!", "?", "+", "*", ",":
       return false
     default:
       return true
@@ -74,9 +74,12 @@ opp.addPrefix("?", Prefix(ExprOp("?").unary, 50))
 
 let oparen = const("(") ~> skip
 let cparen = const(")") ~> skip
+let comma = const(",") ~> skip
 
 let brackets = oparen >~ opp ~> cparen
-let termParser  = leaf | brackets
+let fncall = identifier ~>~ (oparen >~ sepby(opp, comma) ~> cparen) |> Expr.MakeFn
+
+let termParser  = fncall | brackets | leaf
 opp.term = termParser.parse
 
 lnprint(cStyle(parse(opp, "foo")!))
@@ -91,6 +94,9 @@ lnprint(cStyle(parse(opp, "!?foo")!))
 lnprint(cStyle(parse(opp, "!foo + bar")!))
 lnprint(cStyle(parse(opp, "!(foo + bar)")!))
 lnprint(cStyle(parse(opp, "?foo + bar")!))
+lnprint(cStyle(parse(opp, "sqrt(a + b)")!))
+lnprint(cStyle(parse(opp, "goo(a + b, c * sqrt(d))")!))
+
 
 
 
