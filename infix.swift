@@ -1,5 +1,7 @@
-protocol Prefix {
-  func parse<T>(OperatorPrecedence<T>, CharStream) -> T?
+class Prefix<T> {
+  func parse(opp:OperatorPrecedence<T>, _ stream:CharStream) -> T? {
+    return nil
+  }
 }
 
 enum Associativity {
@@ -32,13 +34,13 @@ class OperatorPrecedence<T> : Parser {
   typealias Target = T
   typealias ParseFunc  = CharStream -> T?
 
-  let infixFormat: CharStream -> String?
+  let opFormat: CharStream -> String?
 
   var term: ParseFunc?
-  var infixParsers: [String:Infix<T>]
+  private var infixParsers: [String:Infix<T>]
 
-  init(infixFormat: CharStream -> String?) {
-    self.infixFormat = infixFormat
+  init(opFormat: CharStream -> String?) {
+    self.opFormat = opFormat
     term = nil
     infixParsers = [:]
   }
@@ -52,7 +54,7 @@ class OperatorPrecedence<T> : Parser {
     if ass == .Right {
       prec = prec - 1
     }
-    while let ifx = GetInfix(stream) {
+    while let ifx = getInfix(stream) {
       if ifx.prec > prec {
         lft = ifx.parse(self, stream, lft)!
       } else {
@@ -69,12 +71,12 @@ class OperatorPrecedence<T> : Parser {
 
   var next:Infix<T>?
 
-  private func GetInfix(stream:CharStream) -> Infix<T>? {
+  private func getInfix(stream:CharStream) -> Infix<T>? {
     if let ifx = next {
       next = nil
       return ifx
     }
-    if let str = infixFormat(stream) {
+    if let str = opFormat(stream) {
       return infixParsers[str]
     }
     return nil
@@ -85,7 +87,7 @@ class OperatorPrecedence<T> : Parser {
     next = ifx
   }
 
-  private func GetPrefix(stream:CharStream) -> Prefix? {
+  private func getPrefix(stream:CharStream) -> Prefix<T>? {
     return nil
   }
 
