@@ -64,10 +64,11 @@ class ExprOp {
   }
 }
 
-let opFormat = (regex("[+*!?]")) ~> skip
+let opFormat = (regex("[+*!?-]")) ~> skip
 let opp = OperatorPrecedence<Expr>(opFormat.parse)
 
 opp.addOperator("+", .LeftInfix(ExprOp("+").binary, 60))
+opp.addOperator("-", .LeftInfix(ExprOp("-").binary, 60))
 opp.addOperator("*", .RightInfix(ExprOp("*").binary, 70))
 opp.addPrefix("!", Prefix(ExprOp("!").unary, 200))
 opp.addPrefix("?", Prefix(ExprOp("?").unary, 50))
@@ -79,15 +80,29 @@ let comma = const(",") ~> skip
 let brackets = oparen >~ opp ~> cparen
 let fncall = identifier ~>~ (oparen >~ sepby(opp, comma) ~> cparen) |> Expr.MakeFn
 
-let termParser  = fncall | brackets | leaf
+let flt = FloatParser(strict:false) ~> skip
+lnprint(parse(flt, "-123"))
+lnprint(parse(flt, "12.3"))
+lnprint(parse(flt, "0.123"))
+lnprint(parse(flt, "-.123"))
+lnprint(parse(flt, "-12.3e39"))
+
+let number = flt |> {(x:Double)->Expr in Expr.MakeLeaf("\(x)")}
+
+let termParser  = fncall | brackets | number | leaf
 opp.term = termParser.parse
+
+
 
 lnprint(cStyle(parse(opp, "foo")!))
 lnprint(cStyle(parse(opp, "foo + bar")!))
 lnprint(cStyle(parse(opp, "foo + bar + abc")!))
 lnprint(cStyle(parse(opp, "foo * bar + abc")!))
+lnprint(cStyle(parse(opp, "22.3 + foo * abc")!))
+lnprint(cStyle(parse(opp, "foo * abc + 43.79e3")!))
+lnprint(cStyle(parse(opp, "foo + !43.79e3 * abc")!))
+lnprint(cStyle(parse(opp, "22.3 + foo * abc")!))
 lnprint(cStyle(parse(opp, "foo * (bar + abc)")!))
-lnprint(cStyle(parse(opp, "foo + bar * abc")!))
 lnprint(cStyle(parse(opp, "foo * bar * abc")!))
 lnprint(cStyle(parse(opp, "!foo")!))
 lnprint(cStyle(parse(opp, "!?foo")!))
@@ -96,29 +111,4 @@ lnprint(cStyle(parse(opp, "!(foo + bar)")!))
 lnprint(cStyle(parse(opp, "?foo + bar")!))
 lnprint(cStyle(parse(opp, "sqrt(a + b)")!))
 lnprint(cStyle(parse(opp, "goo(a + b, c * sqrt(d))")!))
-
-let flt = FloatParser(strict:true)
-lnprint(parse(flt, "-123"))
-lnprint(parse(flt, "12.3"))
-lnprint(parse(flt, "0.123"))
-lnprint(parse(flt, "-.123"))
-lnprint(parse(flt, "-12.3e39"))
-
-class Calculator {
-
-  /*class*/ let leaf = FloatParser(strict:true)
-
-}
-
-
-var expr = LateBound<Expr>()
-
-let fnCall = oparen >~ pipe2(identifier, many(expr), Expr.MakeFn) ~> cparen
-let choice = fnCall | leaf
-expr.inner = choice.parse
-
-
-
-let sexpr = "(f (add a (g b)) a (g c))"
-let result6 = parse(expr, sexpr)
-println("\(sexpr) = \(cStyle(result6!))")
+lnprint(cStyle(parse(opp, "foo - -22.9")!))
