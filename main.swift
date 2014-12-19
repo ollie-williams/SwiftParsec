@@ -97,8 +97,18 @@ lnprint(cStyle(parse(opp, "?foo + bar")!))
 lnprint(cStyle(parse(opp, "sqrt(a + b)")!))
 lnprint(cStyle(parse(opp, "goo(a + b, c * sqrt(d))")!))
 
+let flt = FloatParser(strict:true)
+lnprint(parse(flt, "-123"))
+lnprint(parse(flt, "12.3"))
+lnprint(parse(flt, "0.123"))
+lnprint(parse(flt, "-.123"))
+lnprint(parse(flt, "-12.3e39"))
 
+class Calculator {
 
+  /*class*/ let leaf = FloatParser(strict:true)
+
+}
 
 
 var expr = LateBound<Expr>()
