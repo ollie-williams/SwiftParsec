@@ -9,52 +9,10 @@ func parse<T:Parser>(parser:T, string:String) -> T.Target? {
   return parser.parse(stream)
 }
 
-let json_input = String(contentsOfFile: "/Users/oliverwilliams/Dev/octopus/test.json")!
+let json_input = String(contentsOfFile: "test.json")!
 println(json_input)
 let json = JSParser.parse(json_input)
 println(json!)
-
-// Skip over whitespace
-let skip = manychars(const(" "))
-
-// Useful character constants
-let oparen = const("(") ~> skip
-let cparen = const(")") ~> skip
-let comma = const(",") ~> skip
-
-// The operator precendence parser at the heart of our calculator
-let opFormat = (regex("[+*-/\\^]")) ~> skip
-let opp = OperatorPrecedence<Double>(opFormat.parse)
-
-// Floating-point number literals
-let flt = FloatParser(strict:false) ~> skip
-
-// Infix operators
-opp.addOperator("+", .LeftInfix({return $0 + $1}, 60))
-opp.addOperator("-", .LeftInfix({return $0 - $1}, 60))
-opp.addOperator("*", .LeftInfix({return $0 * $1}, 70))
-opp.addOperator("/", .LeftInfix({return $0 / $1}, 70))
-opp.addOperator("^", .LeftInfix({return pow($0,$1)}, 80))
-
-
-// Functions
-let arg1 = oparen >~ opp ~> cparen
-let sinfunc = const("sin") >~ arg1 |> sin
-let cosfunc = const("cos") >~ arg1 |> cos
-let tanfunc = const("tan") >~ arg1 |> tan
-let expfunc = const("exp") >~ arg1 |> exp
-let logfunc = const("log") >~ arg1 |> log
-let sqrtfunc = const("sqrt") >~ arg1 |> sqrt
-let funcs = sinfunc | cosfunc | tanfunc | expfunc | logfunc | sqrtfunc
-
-// A term in brackets
-let brackets = oparen >~ opp ~> cparen
-
-// Parsing terms within an infix expression
-let termParser  = funcs | brackets | flt
-opp.term = termParser.parse
-
-
 
 import Cocoa
 
@@ -74,7 +32,7 @@ func mainloop() -> Void {
       return
     }
 
-    if let result = opp.parse(stream) {
+    if let result = Calculator.parse(stream) {
       println(result)
     } else {
       println("syntax error")
@@ -82,7 +40,7 @@ func mainloop() -> Void {
   }
 }
 
-//mainloop()
+mainloop()
 
 // Identifiers
 //let identifier = regex("[_a-zA-Z][_a-zA-Z0-9]*") ~> skip

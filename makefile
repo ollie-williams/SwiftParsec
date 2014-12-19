@@ -11,6 +11,7 @@ SRCS=\
 	alternates.swift \
 	token.swift \
 	json.swift \
+	calculator.swift \
 	main.swift
 
 TARGET=octopus
