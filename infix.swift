@@ -114,11 +114,15 @@ class OperatorPrecedence<T> : Parser {
   }
 
   func parse(stream:CharStream, _ prec:Int) -> T? {
-    var lft = parseStart(stream)!
+    var lft = parseStart(stream)
 
     while let ifx = infixOps.get(stream) {
+      if lft == nil {
+        return nil
+      }
+
       if ifx.precedence > prec {
-        lft = ifx.parse(self, stream, lft)!
+        lft = ifx.parse(self, stream, lft!)
       } else {
         infixOps.putBack(ifx)
         break

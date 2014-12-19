@@ -1,6 +1,89 @@
+import Darwin
+
 func lnprint<T>(val:T, file: String = __FILE__, line: Int = __LINE__) -> Void {
   println("\(file)(\(line)): \(val)")
 }
+
+// Skip over whitespace
+let skip = manychars(const(" "))
+
+// Useful character constants
+let oparen = const("(") ~> skip
+let cparen = const(")") ~> skip
+let comma = const(",") ~> skip
+
+// The operator precendence parser at the heart of our calculator
+let opFormat = (regex("[+*-/\\^]")) ~> skip
+let opp = OperatorPrecedence<Double>(opFormat.parse)
+
+// Floating-point number literals
+let flt = FloatParser(strict:false) ~> skip
+
+// Infix operators
+opp.addOperator("+", .LeftInfix({return $0 + $1}, 60))
+opp.addOperator("-", .LeftInfix({return $0 - $1}, 60))
+opp.addOperator("*", .LeftInfix({return $0 * $1}, 70))
+opp.addOperator("/", .LeftInfix({return $0 / $1}, 70))
+opp.addOperator("^", .LeftInfix({return pow($0,$1)}, 80))
+
+
+// Functions
+let arg1 = oparen >~ opp ~> cparen
+let sinfunc = const("sin") >~ arg1 |> sin
+let cosfunc = const("cos") >~ arg1 |> cos
+let tanfunc = const("tan") >~ arg1 |> tan
+let expfunc = const("exp") >~ arg1 |> exp
+let logfunc = const("log") >~ arg1 |> log
+let sqrtfunc = const("sqrt") >~ arg1 |> sqrt
+let funcs = sinfunc | cosfunc | tanfunc | expfunc | logfunc | sqrtfunc
+
+// A term in brackets
+let brackets = oparen >~ opp ~> cparen
+
+// Parsing terms within an infix expression
+let termParser  = funcs | brackets | flt
+opp.term = termParser.parse
+
+func parse<T:Parser>(parser:T, string:String) -> T.Target? {
+  var stream = CharStream(str:string)
+  return parser.parse(stream)
+}
+
+import Cocoa
+
+func readline() -> String {
+  var keyboard = NSFileHandle.fileHandleWithStandardInput()
+  var inputData = keyboard.availableData
+  return NSString(data: inputData, encoding:NSUTF8StringEncoding)!
+}
+
+func mainloop() -> Void {
+  while(true) {
+    print("> ")
+    let s = readline()
+    let stream = CharStream(str:s)
+    if stream.startsWith("quit") || stream.startsWith("exit") {
+      return
+    }
+
+    if let result = opp.parse(stream) {
+      println(result)
+    } else {
+      println("syntax error")
+    }
+  }
+}
+
+mainloop()
+
+// Identifiers
+//let identifier = regex("[_a-zA-Z][_a-zA-Z0-9]*") ~> skip
+
+
+
+
+
+/*
 
 func parse<T:Parser>(parser:T, string:String) -> T.Target? {
   var stream = CharStream(str:string)
@@ -72,6 +155,8 @@ opp.addOperator("-", .LeftInfix(ExprOp("-").binary, 60))
 opp.addOperator("*", .RightInfix(ExprOp("*").binary, 70))
 opp.addPrefix("!", Prefix(ExprOp("!").unary, 200))
 opp.addPrefix("?", Prefix(ExprOp("?").unary, 50))
+opp.addPrefix("-", Prefix(ExprOp("-").unary, 200))
+opp.addPrefix("+", Prefix(ExprOp("+").unary, 200))
 
 let oparen = const("(") ~> skip
 let cparen = const(")") ~> skip
@@ -92,8 +177,6 @@ let number = flt |> {(x:Double)->Expr in Expr.MakeLeaf("\(x)")}
 let termParser  = fncall | brackets | number | leaf
 opp.term = termParser.parse
 
-
-
 lnprint(cStyle(parse(opp, "foo")!))
 lnprint(cStyle(parse(opp, "foo + bar")!))
 lnprint(cStyle(parse(opp, "foo + bar + abc")!))
@@ -111,4 +194,7 @@ lnprint(cStyle(parse(opp, "!(foo + bar)")!))
 lnprint(cStyle(parse(opp, "?foo + bar")!))
 lnprint(cStyle(parse(opp, "sqrt(a + b)")!))
 lnprint(cStyle(parse(opp, "goo(a + b, c * sqrt(d))")!))
+lnprint(cStyle(parse(opp, "foo - -bar")!))
 lnprint(cStyle(parse(opp, "foo - -22.9")!))
+
+*/
