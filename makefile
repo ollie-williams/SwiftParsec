@@ -9,6 +9,8 @@ SRCS=\
 	pipe.swift \
 	repeats.swift \
 	alternates.swift \
+	token.swift \
+	json.swift \
 	main.swift
 
 TARGET=octopus

@@ -4,6 +4,16 @@ func lnprint<T>(val:T, file: String = __FILE__, line: Int = __LINE__) -> Void {
   println("\(file)(\(line)): \(val)")
 }
 
+func parse<T:Parser>(parser:T, string:String) -> T.Target? {
+  var stream = CharStream(str:string)
+  return parser.parse(stream)
+}
+
+let json_input = String(contentsOfFile: "/Users/oliverwilliams/Dev/octopus/test.json")!
+println(json_input)
+let json = JSParser.parse(json_input)
+println(json!)
+
 // Skip over whitespace
 let skip = manychars(const(" "))
 
@@ -44,10 +54,7 @@ let brackets = oparen >~ opp ~> cparen
 let termParser  = funcs | brackets | flt
 opp.term = termParser.parse
 
-func parse<T:Parser>(parser:T, string:String) -> T.Target? {
-  var stream = CharStream(str:string)
-  return parser.parse(stream)
-}
+
 
 import Cocoa
 
@@ -75,7 +82,7 @@ func mainloop() -> Void {
   }
 }
 
-mainloop()
+//mainloop()
 
 // Identifiers
 //let identifier = regex("[_a-zA-Z][_a-zA-Z0-9]*") ~> skip
