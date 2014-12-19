@@ -13,8 +13,8 @@ SRCS=\
 
 TARGET=octopus
 
-all: $(SRCS)
-	xcrun -sdk macosx swiftc -g -o $(TARGET) $(SRCS)
+all: $(SRCS) bridge.h
+	xcrun -sdk macosx swiftc -g -o $(TARGET) -import-objc-header bridge.h $(SRCS)
 
 run: all
 	./$(TARGET)

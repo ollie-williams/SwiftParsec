@@ -60,6 +60,7 @@ func readline() -> String {
 func mainloop() -> Void {
   while(true) {
     print("> ")
+    fflush(__stdoutp)
     let s = readline()
     let stream = CharStream(str:s)
     if stream.startsWith("quit") || stream.startsWith("exit") {
