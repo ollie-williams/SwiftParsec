@@ -8,7 +8,7 @@ struct Calculator {
   static let comma = const(",") ~> skip
 
   // The operator precendence parser at the heart of our calculator
-  static let opFormat = (regex("[+*-/\\^]")) ~> skip
+  static let opFormat = (regex("[+*-/%\\^]")) ~> skip
   static let opp = OperatorPrecedence<Double>(opFormat.parse)
 
   // Floating-point number literals
@@ -30,7 +30,7 @@ struct Calculator {
   // Parsing terms within an infix expression
   static let termParser  = funcs | brackets | flt
 
-  // Top-level parser
+  // Top-level parser ensures that the whole string got processed
   static let top = opp ~> eof()
 
   private static func initialize() -> Void {
