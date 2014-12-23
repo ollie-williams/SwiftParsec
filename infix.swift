@@ -143,7 +143,7 @@ class OperatorPrecedence<T> : Parser {
     infixOps.dict[name] = op
   }
 
-  func addPrefix(name:String, _ pfx:Prefix<T>) {
+  func addOperator(name:String, _ pfx:Prefix<T>) {
     prefixOps.dict[name] = pfx
   }
 

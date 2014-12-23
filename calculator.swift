@@ -33,11 +33,15 @@ struct Calculator {
   private static func initialize() -> Void {
     if opp.term == nil {
       // Add infix operators
-      opp.addOperator("+", .LeftInfix({return $0 + $1}, 60))
-      opp.addOperator("-", .LeftInfix({return $0 - $1}, 60))
+      opp.addOperator("+", .LeftInfix({return $0 + $1}, 50))
+      opp.addOperator("-", .LeftInfix({return $0 - $1}, 50))
       opp.addOperator("*", .LeftInfix({return $0 * $1}, 70))
       opp.addOperator("/", .LeftInfix({return $0 / $1}, 70))
       opp.addOperator("^", .LeftInfix({return pow($0,$1)}, 80))
+
+      // Add prefix operators
+      opp.addOperator("+", Prefix({return +$0}, 60))
+      opp.addOperator("-", Prefix({return -$0}, 60))
 
       // Close the loop
       opp.term = termParser.parse
