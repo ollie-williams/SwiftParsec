@@ -1,15 +1,14 @@
 import Cocoa
 
-class Integer : Parser {
+struct Integer : Parser {
   typealias Target = Int
 
+  static let impl = pipe(
+    regex("[+-]?[0-9]+"),
+    {$0.toInt()!})
+
   func parse(stream:CharStream) -> Int? {
-    let regex = "[+-]?[0-9]+"
-    if let match = stream.startsWithRegex(regex) {
-      stream.advance(countElements(match))
-      return match.toInt()
-    }
-    return nil
+    return Integer.impl.parse(stream)
   }
 }
 
