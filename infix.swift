@@ -73,8 +73,16 @@ private class OpSet<V> {
       next = nil
       return try
     }
+    let old = stream.pos
     if let str = pattern(stream) {
-      return dict[str]
+      if let retval = dict[str] {
+        return retval
+      } else {
+        // Put characters back if we don't know how to use them here:
+        // either they'll be picked-up by another round of processing, or
+        // there's a syntax error
+        stream.pos = old
+      }
     }
     return nil
   }
