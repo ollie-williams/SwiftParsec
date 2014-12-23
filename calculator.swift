@@ -37,6 +37,7 @@ struct Calculator {
       opp.addOperator("-", .LeftInfix({return $0 - $1}, 50))
       opp.addOperator("*", .LeftInfix({return $0 * $1}, 70))
       opp.addOperator("/", .LeftInfix({return $0 / $1}, 70))
+      opp.addOperator("%", .LeftInfix({return $0 % $1}, 70))
       opp.addOperator("^", .LeftInfix({return pow($0,$1)}, 80))
 
       // Add prefix operators

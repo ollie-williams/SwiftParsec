@@ -48,29 +48,7 @@ func regex(pattern:String) -> Regex {
   return Regex(pattern:pattern)
 }
 
-class Satisfy : Parser {
-  let condition: Character -> Bool
 
-  typealias Target = Character
-
-  init(condition:Character -> Bool) {
-    self.condition = condition
-  }
-
-  func parse(stream:CharStream) -> Target? {
-    if let ch = stream.head {
-      if condition(ch) {
-        stream.advance(1)
-        return ch
-      }
-    }
-    return nil
-  }
-}
-
-func satisfy(condition:Character->Bool) -> Satisfy {
-  return Satisfy(condition)
-}
 
 
 // Helpful versions which turn arrays of Characters into Strings
