@@ -31,6 +31,12 @@ class CharStream {
     }
   }
 
+  var eof:Bool {
+    get {
+      return pos == str.endIndex
+    }
+  }
+
   func startsWith(query: String) -> Bool {
     return str.substringFromIndex(pos).hasPrefix(query)
   }
@@ -39,7 +45,7 @@ class CharStream {
     if let range = str.rangeOfString(
       pattern,
       options: .RegularExpressionSearch | .AnchoredSearch,
-      range: pos..<str.endIndex, 
+      range: pos..<str.endIndex,
       locale: nil) {
       return str.substringWithRange(range)
     }

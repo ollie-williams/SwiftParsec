@@ -30,6 +30,9 @@ struct Calculator {
   // Parsing terms within an infix expression
   static let termParser  = funcs | brackets | flt
 
+  // Top-level parser
+  static let top = opp ~> eof()
+
   private static func initialize() -> Void {
     if opp.term == nil {
       // Add infix operators
@@ -51,6 +54,6 @@ struct Calculator {
 
   static func parse(stream:CharStream) -> Double? {
     initialize()
-    return opp.parse(stream)
+    return top.parse(stream)
   }
 }

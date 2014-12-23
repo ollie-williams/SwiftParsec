@@ -48,7 +48,21 @@ func regex(pattern:String) -> Regex {
   return Regex(pattern:pattern)
 }
 
+class EndOfFile : Parser {
+  typealias Target = Void
 
+  func parse(stream:CharStream) -> Target? {
+    if stream.eof {
+      return Target()
+    } else {
+      return nil
+    }
+  }
+}
+
+func eof() -> EndOfFile {
+  return EndOfFile()
+}
 
 
 // Helpful versions which turn arrays of Characters into Strings
