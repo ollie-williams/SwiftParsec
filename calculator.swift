@@ -1,4 +1,4 @@
-struct Calculator {
+struct Calculator : Parser {
   // Skip over whitespace
   static let skip = regex("\\s*")
 
@@ -30,9 +30,6 @@ struct Calculator {
   // Parsing terms within an infix expression
   static let termParser  = funcs | brackets | flt
 
-  // Top-level parser ensures that the whole string got processed
-  static let top = opp ~> eof()
-
   private static func initialize() -> Void {
     if opp.term == nil {
       // Add infix operators
@@ -54,6 +51,12 @@ struct Calculator {
 
   static func parse(stream:CharStream) -> Double? {
     initialize()
-    return top.parse(stream)
+    return opp.parse(stream)
+  }
+
+  // Parser implementation
+  typealias Target = Double
+  func parse(stream:CharStream) -> Target? {
+    return Calculator.parse(stream)
   }
 }

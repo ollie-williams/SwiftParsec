@@ -34,7 +34,7 @@ enum JSValue : Printable {
   }
 }
 
-struct JSParser {
+struct JSParser : Parser {
   static let skip = regex("\\s*")
   static let dquote = const("\"")
   static let ocurly = const("{") ~> skip
@@ -58,6 +58,7 @@ struct JSParser {
   static let objimpl = ocurly >~ sepby(pair, comma) ~> ccurly |> makeObj
   static let arrayimpl = obrack >~ sepby(value, comma) ~> cbrack |> JSValue.makeary
 
+
   static func parse(str:String) -> JSObject? {
     let stream = CharStream(str:str)
     return parse(stream)
@@ -67,5 +68,11 @@ struct JSParser {
     object.inner = objimpl.parse
     array.inner = arrayimpl.parse
     return object.parse(stream)
+  }
+
+  // Parse implementation
+  typealias Target = JSObject
+  func parse(stream:CharStream) -> Target? {
+    return JSParser.parse(stream)
   }
 }

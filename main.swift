@@ -23,6 +23,9 @@ func readline() -> String {
 }
 
 func mainloop() -> Void {
+
+  let calcp = Calculator() ~> eof()
+
   while(true) {
     print("> ")
     fflush(__stdoutp)
@@ -32,7 +35,7 @@ func mainloop() -> Void {
       return
     }
 
-    if let result = Calculator.parse(stream) {
+    if let result = calcp.parse(stream) {
       println(result)
     } else {
       println("syntax error")
