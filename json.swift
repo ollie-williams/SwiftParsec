@@ -1,5 +1,4 @@
 typealias JSObject = [String:JSValue]
-
 func makeObj(values:[(String,JSValue)]) -> JSObject {
   var record = JSObject()
   for (name,val) in values {

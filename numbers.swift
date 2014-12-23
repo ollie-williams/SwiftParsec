@@ -41,6 +41,7 @@ struct FloatParser : Parser {
       stream.pos = start
       if let fp = FloatParser.impl.parse(stream) {
         if stream.pos == intend {
+          stream.pos = start
           return nil
         }
         return fp
