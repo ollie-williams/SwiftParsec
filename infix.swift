@@ -9,7 +9,11 @@ class Prefix<T> {
     self.prec = prec
   }
 
-  func parse(opp:OperatorPrecedence<T>, _ stream:CharStream) -> T? {
+  func parse<
+    O:Parser, P:Parser
+    where P.Target==T, O.Target==String>
+                       (opp:OperatorPrecedence<T,O,P>, _ stream:CharStream) -> T? 
+  {
     if let arg = opp.parse(stream, prec) {
       return build(arg)
     }
@@ -26,7 +30,11 @@ enum OperatorHandler<T> {
   case RightInfix(Binary, Int)
   case Postfix(Unary, Int)
 
-  func parse(opp:OperatorPrecedence<T>, _ stream:CharStream, _ lft:T) -> T? {
+  func parse<
+      O:Parser, P:Parser
+      where P.Target==T, O.Target==String>
+      (opp:OperatorPrecedence<T,O,P>, _ stream:CharStream, _ lft:T) -> T? 
+{
     switch self {
       case LeftInfix(let binary, let prec):
         if let rgt = opp.parse(stream, prec) {
@@ -57,12 +65,12 @@ enum OperatorHandler<T> {
   }
 }
 
-private class OpSet<V> {
-  let pattern: CharStream -> String?
+private class OpSet<V,O:Parser where O.Target==String> {
+  let pattern: O
   var dict:    [String:V]
   var next:    V?
 
-  init(pattern:CharStream -> String?) {
+  init(pattern:O) {
     self.pattern = pattern
     self.dict = [:]
     self.next = nil
@@ -74,13 +82,13 @@ private class OpSet<V> {
       return try
     }
     let old = stream.pos
-    if let str = pattern(stream) {
+    if let str = pattern.parse(stream) {
       if let retval = dict[str] {
         return retval
       } else {
         // Put characters back if we don't know how to use them here:
-        // either they'll be picked-up by another round of processing, or
-        // there's a syntax error
+        // either they'll be picked-up by another round of processing
+        // or there's a syntax error
         stream.pos = old
       }
     }
@@ -93,18 +101,20 @@ private class OpSet<V> {
   }
 }
 
-class OperatorPrecedence<T> : Parser {
+class OperatorPrecedence<
+  T, O:Parser, P:Parser 
+  where P.Target==T, O.Target==String > : Parser 
+{
   typealias Target = T
-  typealias ParseFunc  = CharStream -> T?
 
-  private let infixOps:OpSet<OperatorHandler<T>>
-  private let prefixOps:OpSet<Prefix<T>>
-  var primary: ParseFunc?
+  private let infixOps  : OpSet<OperatorHandler<T>, O>
+  private let prefixOps : OpSet<Prefix<T>, O>
+  private let primary   : P
 
-  init(opFormat: CharStream -> String?) {
-    infixOps = OpSet<OperatorHandler<T>>(opFormat)
-    prefixOps = OpSet<Prefix<T>>(opFormat)
-    primary = nil
+  init(opFormat:O, primary:P) {
+    infixOps = OpSet<OperatorHandler<T>,O>(pattern:opFormat)
+    prefixOps = OpSet<Prefix<T>,O>(pattern:opFormat)
+    self.primary = primary
   }
 
   func parse(stream:CharStream) -> T? {
@@ -115,7 +125,7 @@ class OperatorPrecedence<T> : Parser {
     if let pfx = prefixOps.get(stream) {
       return pfx.parse(self, stream)
     }
-    if let p = Primary(stream) {
+    if let p = primary.parse(stream) {
       return p
     }
     return nil
@@ -145,12 +155,5 @@ class OperatorPrecedence<T> : Parser {
 
   func addOperator(name:String, _ pfx:Prefix<T>) {
     prefixOps.dict[name] = pfx
-  }
-
-  private func Primary(stream:CharStream) -> T? {
-    if let prim = primary {
-      return prim(stream)
-    }
-    return nil
   }
 }
