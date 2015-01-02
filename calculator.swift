@@ -27,11 +27,11 @@ struct Calculator : Parser {
   // A term in brackets
   static let brackets = oparen >~ opp ~> cparen
 
-  // Parsing terms within an infix expression
-  static let termParser  = funcs | brackets | flt
+  // Parsing primaries within an infix expression
+  static let primaryParser  = funcs | brackets | flt
 
   private static func initialize() -> Void {
-    if opp.term == nil {
+    if opp.primary == nil {
       // Add infix operators
       opp.addOperator("+", .LeftInfix({return $0 + $1}, 50))
       opp.addOperator("-", .LeftInfix({return $0 - $1}, 50))
@@ -45,7 +45,7 @@ struct Calculator : Parser {
       opp.addOperator("-", Prefix({return -$0}, 60))
 
       // Close the loop
-      opp.term = termParser.parse
+      opp.primary = primaryParser.parse
     }
   }
 

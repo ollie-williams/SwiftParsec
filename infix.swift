@@ -99,12 +99,12 @@ class OperatorPrecedence<T> : Parser {
 
   private let infixOps:OpSet<OperatorHandler<T>>
   private let prefixOps:OpSet<Prefix<T>>
-  var term: ParseFunc?
+  var primary: ParseFunc?
 
   init(opFormat: CharStream -> String?) {
     infixOps = OpSet<OperatorHandler<T>>(opFormat)
     prefixOps = OpSet<Prefix<T>>(opFormat)
-    term = nil
+    primary = nil
   }
 
   func parse(stream:CharStream) -> T? {
@@ -115,8 +115,8 @@ class OperatorPrecedence<T> : Parser {
     if let pfx = prefixOps.get(stream) {
       return pfx.parse(self, stream)
     }
-    if let t = Term(stream) {
-      return t
+    if let p = Primary(stream) {
+      return p
     }
     return nil
   }
@@ -147,9 +147,9 @@ class OperatorPrecedence<T> : Parser {
     prefixOps.dict[name] = pfx
   }
 
-  private func Term(stream:CharStream) -> T? {
-    if let tp = term {
-      return tp(stream)
+  private func Primary(stream:CharStream) -> T? {
+    if let prim = primary {
+      return prim(stream)
     }
     return nil
   }
