@@ -9,7 +9,8 @@ struct Calculator : Parser {
 
   // The operator precendence parser at the heart of our calculator
   static let opFormat = (regex("[+*-/%\\^]")) ~> skip
-  static let opp = OperatorPrecedence<Double>(opFormat.parse)
+  static let primary = LateBound<Double>()
+  static let opp = OperatorPrecedence(opFormat:opFormat, primary:primary)
 
   // Floating-point number literals
   static let flt = FloatParser(strict:false) ~> skip
@@ -28,10 +29,10 @@ struct Calculator : Parser {
   static let brackets = oparen >~ opp ~> cparen
 
   // Parsing primaries within an infix expression
-  static let primaryParser  = funcs | brackets | flt
+  static let primaryImpl  = funcs | brackets | flt
 
   private static func initialize() -> Void {
-    if opp.primary == nil {
+    if primary.inner == nil {
       // Add infix operators
       opp.addOperator("+", .LeftInfix({return $0 + $1}, 50))
       opp.addOperator("-", .LeftInfix({return $0 - $1}, 50))
@@ -45,7 +46,7 @@ struct Calculator : Parser {
       opp.addOperator("-", Prefix({return -$0}, 60))
 
       // Close the loop
-      opp.primary = primaryParser.parse
+      primary.inner = primaryImpl.parse
     }
   }
 
