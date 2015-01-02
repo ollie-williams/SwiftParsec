@@ -41,8 +41,8 @@ struct Calculator : Parser {
       opp.addOperator("^", .LeftInfix({return pow($0,$1)}, 80))
 
       // Add prefix operators
-      opp.addOperator("+", Prefix({return +$0}, 60))
-      opp.addOperator("-", Prefix({return -$0}, 60))
+      opp.addOperator("+", .Prefix({return +$0}, 60))
+      opp.addOperator("-", .Prefix({return -$0}, 60))
 
       // Close the loop
       primary.inner = primaryImpl.parse

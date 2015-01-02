@@ -26,6 +26,7 @@ enum OperatorHandler<T> {
   typealias Binary = (T, T) -> T?
   typealias Unary = T -> T?
 
+  case Prefix(Unary, Int)
   case LeftInfix(Binary, Int)
   case RightInfix(Binary, Int)
   case Postfix(Unary, Int)
@@ -33,23 +34,30 @@ enum OperatorHandler<T> {
   func parse<
       O:Parser, P:Parser
       where P.Target==T, O.Target==String>
-      (opp:OperatorPrecedence<T,O,P>, _ stream:CharStream, _ lft:T) -> T? 
+      (opp:OperatorPrecedence<T,O,P>, _ stream:CharStream, _ lft:T?) -> T? 
 {
     switch self {
+      case Prefix(let unary, let prec):
+        assert(lft == nil, "Prefix operators don't have left hand sides.")
+        if let arg = opp.parse(stream, prec) {
+          return unary(arg)
+        }
+        break
+
       case LeftInfix(let binary, let prec):
         if let rgt = opp.parse(stream, prec) {
-          return binary(lft, rgt)
+          return binary(lft!, rgt)
         }
         break
 
       case RightInfix(let binary, let prec):
         if let rgt = opp.parse(stream, prec-1) {
-          return binary(lft, rgt)
+          return binary(lft!, rgt)
         }
         break
 
       case Postfix(let unary, _):
-        return unary(lft)
+        return unary(lft!)
     }
     return nil
   }
@@ -57,6 +65,7 @@ enum OperatorHandler<T> {
   var precedence:Int {
     get {
       switch self {
+        case Prefix(_, let prec): return prec
         case LeftInfix(_, let prec): return prec
         case RightInfix(_, let prec): return prec
         case Postfix(_, let prec): return prec
@@ -108,12 +117,12 @@ class OperatorPrecedence<
   typealias Target = T
 
   private let infixOps  : OpSet<OperatorHandler<T>, O>
-  private let prefixOps : OpSet<Prefix<T>, O>
+  private let prefixOps : OpSet<OperatorHandler<T>, O>
   private let primary   : P
 
   init(opFormat:O, primary:P) {
     infixOps = OpSet<OperatorHandler<T>,O>(pattern:opFormat)
-    prefixOps = OpSet<Prefix<T>,O>(pattern:opFormat)
+    prefixOps = OpSet<OperatorHandler<T>,O>(pattern:opFormat)
     self.primary = primary
   }
 
@@ -123,7 +132,7 @@ class OperatorPrecedence<
 
   func parseStart(stream:CharStream) -> T? {
     if let pfx = prefixOps.get(stream) {
-      return pfx.parse(self, stream)
+      return pfx.parse(self, stream, nil)
     }
     if let p = primary.parse(stream) {
       return p
@@ -150,10 +159,13 @@ class OperatorPrecedence<
   }
 
   func addOperator(name:String, _ op:OperatorHandler<T>) {
-    infixOps.dict[name] = op
-  }
-
-  func addOperator(name:String, _ pfx:Prefix<T>) {
-    prefixOps.dict[name] = pfx
+    switch(op) {
+      case .Prefix:
+        prefixOps.dict[name] = op
+        break
+      default:
+        infixOps.dict[name] = op
+        break
+    }
   }
 }
