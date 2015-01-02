@@ -12,7 +12,7 @@ class Prefix<T> {
   func parse<
     O:Parser, P:Parser
     where P.Target==T, O.Target==String>
-                       (opp:OperatorPrecedence<T,O,P>, _ stream:CharStream) -> T? 
+    (opp:OperatorPrecedence<T,O,P>, _ stream:CharStream) -> T? 
   {
     if let arg = opp.parse(stream, prec) {
       return build(arg)
@@ -66,9 +66,9 @@ enum OperatorHandler<T> {
 }
 
 private class OpSet<V,O:Parser where O.Target==String> {
-  let pattern: O
-  var dict:    [String:V]
-  var next:    V?
+  let pattern      : O
+  var dict         : [String:V]
+  private var next : V?
 
   init(pattern:O) {
     self.pattern = pattern
