@@ -2,15 +2,14 @@ struct Calculator : Parser {
   // Skip over whitespace
   static let skip = regex("\\s*")
 
-  // Useful character constants
-  static let oparen = const("(") ~> skip
-  static let cparen = const(")") ~> skip
-  static let comma = const(",") ~> skip
-
   // The operator precendence parser at the heart of our calculator
   static let opFormat = (regex("[+*-/%\\^]")) ~> skip
   static let primary = LateBound<Double>()
   static let opp = OperatorPrecedence(opFormat:opFormat, primary:primary)
+
+  // Useful character constants
+  static let oparen = const("(") ~> skip
+  static let cparen = const(")") ~> skip
 
   // Floating-point number literals
   static let flt = FloatParser(strict:false) ~> skip
