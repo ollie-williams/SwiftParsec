@@ -1,0 +1,7 @@
+[package]
+name = "octopus"
+version = "0.0.1"
+authors = [ "Oliver Williams <ollie@olliewilliams.org>" ]
+
+[[bin]]
+name = "octopus"
