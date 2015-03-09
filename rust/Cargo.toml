@@ -5,3 +5,6 @@ authors = [ "Oliver Williams <ollie@olliewilliams.org>" ]
 
 [[bin]]
 name = "octopus"
+
+[dependencies]
+regex = "0.1.18"
