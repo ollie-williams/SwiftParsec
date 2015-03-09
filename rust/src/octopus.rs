@@ -8,9 +8,10 @@ fn main() {
       Err(err) => panic!("Error: {}", err)
   };
 
-  if rx.is_match(ipt) {
-      println!("Match\n");
+  let fnd = rx.find(ipt);
+  if let Some(uv) = fnd {
+      println!("{} {}", uv.0, uv.1);
   } else {
-      println!("No match\n");
+      println!("No match");
   }
 }
