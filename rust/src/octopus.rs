@@ -92,8 +92,66 @@ impl<P, T, F> Parser for Pipe<P,F>
     }
 }
 
+struct Choice<P1:Parser, P2:Parser> {
+    first: P1,
+    second: P2
+}
+
+impl<P1,P2> Parser for Choice<P1,P2>
+    where P1:Parser,
+          P2:Parser<Output = P1::Output>
+{
+    type Output = P1::Output;
+
+    fn parse(&self, s:&str) -> Option<(P1::Output,usize)> {
+        if let Some(uv) = self.first.parse(s) {
+            return Some(uv);
+        }
+        return self.second.parse(s);
+    }
+}
+
+/*
+struct LateBound<P:Parser> {
+    inner: Option<P>
+}
+
+
+impl<P> Parser for LateBound<P>
+    where P: Parser
+{
+    type Output = P::Output;
+
+    fn parse(&self, s:&str) -> Op
+}
+*/
+
+enum Expr {
+    Leaf(String),
+    Func(String, Vec<Expr>)
+}
+
+impl Expr {
+    fn make_leaf(name:String) -> Expr {
+        Expr::Leaf(name)
+    }
+
+    fn make_func(name:String, args:Vec<Expr>) -> Expr {
+        Expr::Func(name, args)
+    }
+}
+
 fn main() {
+
+  let identifier = RxParser {rx: regex!(r"^[_a-zA-Z][_a-zA-Z0-9]*")};
+  let leaf = Pipe{ base:identifier, func: Expr::make_leaf };
+
   let ipt = "Hello42!";
+  if let Some(res) = leaf.parse(ipt) {
+      if let Expr::Leaf(name) = res.0 {
+          println!("leaf: {}", name);
+      }
+  }
 
   let p1 = RxParser::new(r"^Hello");
   let p2 = Pipe{ base:IntParser, func: |x| (2 * x) };
