@@ -111,12 +111,12 @@ impl<P1,P2> Parser for Choice<P1,P2>
     }
 }
 
-/*
+
 struct LateBound<P:Parser> {
     inner: Option<P>
 }
 
-
+/*
 impl<P> Parser for LateBound<P>
     where P: Parser
 {
@@ -128,7 +128,7 @@ impl<P> Parser for LateBound<P>
 
 enum Expr {
     Leaf(String),
-    Func(String, Vec<Expr>)
+    Func(String, Box<Expr>)
 }
 
 impl Expr {
@@ -136,15 +136,26 @@ impl Expr {
         Expr::Leaf(name)
     }
 
-    fn make_func(name:String, args:Vec<Expr>) -> Expr {
-        Expr::Func(name, args)
+    fn make_func(name:String, arg:Expr) -> Expr {
+        Expr::Func(name, Box::new(arg))
     }
+}
+
+fn drop<T>(x:T) -> T {
+    x
 }
 
 fn main() {
 
   let identifier = RxParser {rx: regex!(r"^[_a-zA-Z][_a-zA-Z0-9]*")};
   let leaf = Pipe{ base:identifier, func: Expr::make_leaf };
+
+  let oparen = RxParser { rx: regex!(r"^\(") };
+  let cparen = RxParser { rx: regex!(r"^\)") };
+  let skip = RxParser { rx: regex!(r"^\s*") };
+
+  //let expr = [drop(oparen), identifier, drop(skip), leaf, drop(cparen)];
+
 
   let ipt = "Hello42!";
   if let Some(res) = leaf.parse(ipt) {
