@@ -9,6 +9,16 @@ struct RxParser {
     rx:Regex
 }
 
+impl RxParser {
+    fn new(pattern:&str) -> Self {
+        let rx = match Regex::new(pattern) {
+            Ok(re) => re,
+            Err(err) => panic!("Error: {}", err),
+        };
+        return RxParser {rx: rx};
+    }
+}
+
 impl Parser for RxParser {
     fn parse(&self, s:&str) -> Option<usize> {
         let result = match self.rx.find(s) {
@@ -19,17 +29,9 @@ impl Parser for RxParser {
     }
 }
 
-fn find(rx:Regex, s:&str) -> Option<usize> {
-    let rxp = RxParser { rx: rx };
-    return rxp.parse(s);
-}
-
 fn find_hello(s:&str) -> Option<usize> {
-    let rx = match Regex::new(r"^Hello") {
-        Ok(re) => re,
-        Err(err) => panic!("Error: {}", err),
-    };
-    return find(rx, s);
+    let parser = RxParser::new(r"^Hello");
+    return parser.parse(s);
 }
 
 fn main() {
