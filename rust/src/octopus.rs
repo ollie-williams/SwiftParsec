@@ -35,13 +35,29 @@ impl Parser<String> for RxParser {
 
 
 struct IntParser;
-
 impl Parser<i64> for IntParser {
     fn parse(&self, s:&str) -> Option<(i64,usize)> {
         let rx = regex!(r"^[+-]?[0-9]+");
         if let Some(uv) = rx.find(s) {
             let value = i64::from_str(&s[uv.0..uv.1]).unwrap();
             return Some((value, uv.1));
+        }
+        return None;
+    }
+}
+
+struct FollowedBy<P1,P2> {
+    first: P1,
+    second: P2
+}
+
+impl<T1,T2,P1:Parser<T1>,P2:Parser<T2>> Parser<(T1,T2)> for FollowedBy<P1,P2> {
+    fn parse(&self, s:&str) -> Option<((T1,T2),usize)> {
+        if let Some(v1) = self.first.parse(s) {
+            let s2 = &s[v1.1..];
+            if let Some(v2) = self.second.parse(s2) {
+                return Some(((v1.0,v2.0), v2.1));
+            }
         }
         return None;
     }
