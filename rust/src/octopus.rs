@@ -1,8 +1,8 @@
 extern crate regex;
 use regex::Regex;
 
-trait Parser {
-    fn parse(&self, s:&str) -> Option<usize>;
+trait Parser<T> {
+    fn parse(&self, s:&str) -> Option<(T,usize)>;
 }
 
 struct RxParser {
@@ -19,27 +19,25 @@ impl RxParser {
     }
 }
 
-impl Parser for RxParser {
-    fn parse(&self, s:&str) -> Option<usize> {
+impl Parser<String> for RxParser {
+
+    fn parse(&self, s:&str) -> Option<(String,usize)> {
         let result = match self.rx.find(s) {
-            Some(uv) => Some(uv.1),
+            Some(uv) => Some((String::from_str(&s[uv.0..uv.1]), uv.1)),
             None => None
         };
         return result;
     }
-}
 
-fn find_hello(s:&str) -> Option<usize> {
-    let parser = RxParser::new(r"^Hello");
-    return parser.parse(s);
 }
 
 fn main() {
   let ipt = "Hello world!";
 
-  if let Some(ind) = find_hello(ipt) {
-      let rem = &ipt[ind..];
-      println!("Remainder: {}", rem);
+  let parser = RxParser::new(r"^Hello");
+  if let Some(res) = parser.parse(ipt) {
+      let rem = &ipt[res.1..];
+      println!("Result: {}  Remainder: {}", res.0, rem);
   } else {
       println!("No match");
   }
