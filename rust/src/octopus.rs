@@ -56,7 +56,7 @@ impl<T1,T2,P1:Parser<T1>,P2:Parser<T2>> Parser<(T1,T2)> for FollowedBy<P1,P2> {
         if let Some(v1) = self.first.parse(s) {
             let s2 = &s[v1.1..];
             if let Some(v2) = self.second.parse(s2) {
-                return Some(((v1.0,v2.0), v2.1));
+                return Some(((v1.0,v2.0), v1.1 + v2.1));
             }
         }
         return None;
@@ -66,16 +66,14 @@ impl<T1,T2,P1:Parser<T1>,P2:Parser<T2>> Parser<(T1,T2)> for FollowedBy<P1,P2> {
 fn main() {
   let ipt = "Hello42!";
 
-  let parser = RxParser::new(r"^Hello");
-  let parser2 = IntParser;
+  let p1 = RxParser::new(r"^Hello");
+  let p2 = IntParser;
+  let parser = FollowedBy {first:p1, second:p2};
 
   if let Some(res) = parser.parse(ipt) {
       let rem = &ipt[res.1..];
-      println!("Result: {}  Remainder: {}", res.0, rem);
-      if let Some(r2) = parser2.parse(rem) {
-          let rem2 = &rem[r2.1..];
-          println!("Result: {} Remainder: {}", r2.0, rem2);
-      }
+      let value = res.0;
+      println!("Result: {}, {}\nRemainder: {}", value.0, value.1, rem);
   } else {
       println!("No match");
   }
