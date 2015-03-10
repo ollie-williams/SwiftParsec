@@ -11,7 +11,11 @@ fn main() {
   let fnd = rx.find(ipt);
   if let Some(uv) = fnd {
       println!("{} {}", uv.0, uv.1);
+      let rem = &ipt[uv.1..];
+      println!("Remainder: {}", rem);
   } else {
       println!("No match");
+      return;
   }
+
 }
