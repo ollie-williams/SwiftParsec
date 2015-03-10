@@ -4,9 +4,9 @@ extern crate regex;
 use regex::Regex;
 use std::str::FromStr;
 
-trait Parser<T> {
+trait Parser {
     type Output;
-    fn parse(&self, s:&str) -> Option<(T,usize)>;
+    fn parse(&self, s:&str) -> Option<(Self::Output,usize)>;
 }
 
 struct RxParser {
@@ -23,7 +23,7 @@ impl RxParser {
     }
 }
 
-impl Parser<String> for RxParser {
+impl Parser for RxParser {
     type Output = String;
 
     fn parse(&self, s:&str) -> Option<(String,usize)> {
@@ -37,7 +37,7 @@ impl Parser<String> for RxParser {
 
 
 struct IntParser;
-impl Parser<i64> for IntParser {
+impl Parser for IntParser {
     type Output = i64;
 
     fn parse(&self, s:&str) -> Option<(i64,usize)> {
@@ -55,10 +55,10 @@ struct FollowedBy<P1,P2> {
     second: P2
 }
 
-impl<T1,T2,P1:Parser<T1>,P2:Parser<T2>> Parser<(T1,T2)> for FollowedBy<P1,P2> {
-    type Output = (T1,T2);
+impl<P1:Parser,P2:Parser> Parser for FollowedBy<P1,P2> {
+    type Output = (P1::Output, P2::Output);
 
-    fn parse(&self, s:&str) -> Option<((T1,T2),usize)> {
+    fn parse(&self, s:&str) -> Option<((P1::Output,P2::Output),usize)> {
         if let Some(v1) = self.first.parse(s) {
             let s2 = &s[v1.1..];
             if let Some(v2) = self.second.parse(s2) {
