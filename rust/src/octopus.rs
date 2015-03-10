@@ -2,8 +2,7 @@
 #![plugin(regex_macros)]
 extern crate regex;
 use regex::Regex;
-extern crate core;
-use core::str::FromStr;
+use std::str::FromStr;
 
 trait Parser<T> {
     fn parse(&self, s:&str) -> Option<(T,usize)>;
@@ -26,7 +25,7 @@ impl RxParser {
 impl Parser<String> for RxParser {
     fn parse(&self, s:&str) -> Option<(String,usize)> {
         if let Some(uv) = self.rx.find(s) {
-            let value : String = String::from_str(&s[uv.0..uv.1]);
+            let value : String = s[uv.0..uv.1].to_string();
             return Some((value, uv.1));
         }
         return None;
@@ -62,6 +61,18 @@ impl<T1,T2,P1:Parser<T1>,P2:Parser<T2>> Parser<(T1,T2)> for FollowedBy<P1,P2> {
         return None;
     }
 }
+
+/*
+impl<T1,T2,P1:Parser<T1>,P2:Parser<T2>> Shr<P2> for P1 {
+    type Output = FollowedBy<P1, P2>;
+
+    fn shr(self, rhs: P2) -> FollowedBy<P1,P2> {
+        let mut v1:T1;
+        let mut v2:T2;
+        FollowedBy { first:self, second: rhs }
+    }
+}
+*/
 
 fn main() {
   let ipt = "Hello42!";
