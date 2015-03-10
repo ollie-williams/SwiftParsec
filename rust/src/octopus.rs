@@ -62,17 +62,11 @@ impl<T1,T2,P1:Parser<T1>,P2:Parser<T2>> Parser<(T1,T2)> for FollowedBy<P1,P2> {
     }
 }
 
-/*
-impl<T1,T2,P1:Parser<T1>,P2:Parser<T2>> Shr<P2> for P1 {
-    type Output = FollowedBy<P1, P2>;
 
-    fn shr(self, rhs: P2) -> FollowedBy<P1,P2> {
-        let mut v1:T1;
-        let mut v2:T2;
-        FollowedBy { first:self, second: rhs }
-    }
+struct Pipe<T1, P:Parser<T1>, T2> {
+    base: P,
+    fun: Fn(T1) -> T2
 }
-*/
 
 fn main() {
   let ipt = "Hello42!";
