@@ -55,7 +55,10 @@ struct FollowedBy<P1:Parser, P2:Parser> {
     second: P2
 }
 
-impl<P1:Parser,P2:Parser> Parser for FollowedBy<P1,P2> {
+impl<P1,P2> Parser for FollowedBy<P1,P2>
+    where P1: Parser,
+          P2: Parser
+{
     type Output = (P1::Output, P2::Output);
 
     fn parse(&self, s:&str) -> Option<((P1::Output,P2::Output),usize)> {
@@ -69,22 +72,25 @@ impl<P1:Parser,P2:Parser> Parser for FollowedBy<P1,P2> {
     }
 }
 
-/*
-struct Pipe<P, F> {
+struct Pipe<P:Parser, F> {
     base: P,
-    fun: F
+    func: F,
 }
 
-impl<T1, P:Parser<T1>, T2, F:Fn(T1)->T2> Parser<T2> for Pipe<P,F> {
-    fn parse(&self, s:&str) -> Option<(T2,usize)> {
+impl<P, T, F> Parser for Pipe<P,F>
+    where P: Parser,
+          F: Fn(P::Output) -> T
+{
+    type Output = T;
+
+    fn parse(&self, s:&str) -> Option<(T,usize)> {
         let result = match self.base.parse(s) {
-            Some(res) => Some((self.fun(res.0), res.1)),
+            Some(res) => Some(((self.func)(res.0), res.1)),
             None => None
         };
         return result;
     }
 }
-*/
 
 fn main() {
   let ipt = "Hello42!";
