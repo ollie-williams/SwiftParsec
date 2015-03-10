@@ -1,16 +1,20 @@
 extern crate regex;
 use regex::Regex;
 
+fn find(rx:Regex, s:&str) -> Option<usize> {
+    let result = match rx.find(s) {
+        Some(uv) => Some(uv.1),
+        None => None
+    };
+    return result;
+}
+
 fn find_hello(s:&str) -> Option<usize> {
     let rx = match Regex::new(r"^Hello") {
         Ok(re) => re,
         Err(err) => panic!("Error: {}", err),
     };
-
-    match rx.find(s) {
-        Some(uv) => return Some(uv.1),
-        None => return None
-    }
+    return find(rx, s);
 }
 
 fn main() {
