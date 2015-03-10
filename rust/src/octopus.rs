@@ -48,12 +48,18 @@ impl Parser<i64> for IntParser {
 }
 
 fn main() {
-  let ipt = "Hello world!";
+  let ipt = "Hello42!";
 
   let parser = RxParser::new(r"^Hello");
+  let parser2 = IntParser;
+
   if let Some(res) = parser.parse(ipt) {
       let rem = &ipt[res.1..];
       println!("Result: {}  Remainder: {}", res.0, rem);
+      if let Some(r2) = parser2.parse(rem) {
+          let rem2 = &rem[r2.1..];
+          println!("Result: {} Remainder: {}", r2.0, rem2);
+      }
   } else {
       println!("No match");
   }
