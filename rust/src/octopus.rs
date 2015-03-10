@@ -1,6 +1,10 @@
 extern crate regex;
 use regex::Regex;
 
+trait Parser {
+    fn parse(&self, s:&str) -> Option<usize>;
+}
+
 fn find(rx:Regex, s:&str) -> Option<usize> {
     let result = match rx.find(s) {
         Some(uv) => Some(uv.1),
