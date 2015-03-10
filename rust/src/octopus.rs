@@ -1,5 +1,9 @@
+#![feature(plugin)]
+#![plugin(regex_macros)]
 extern crate regex;
 use regex::Regex;
+extern crate core;
+use core::str::FromStr;
 
 trait Parser<T> {
     fn parse(&self, s:&str) -> Option<(T,usize)>;
@@ -20,15 +24,27 @@ impl RxParser {
 }
 
 impl Parser<String> for RxParser {
-
     fn parse(&self, s:&str) -> Option<(String,usize)> {
-        let result = match self.rx.find(s) {
-            Some(uv) => Some((String::from_str(&s[uv.0..uv.1]), uv.1)),
-            None => None
-        };
-        return result;
+        if let Some(uv) = self.rx.find(s) {
+            let value : String = String::from_str(&s[uv.0..uv.1]);
+            return Some((value, uv.1));
+        }
+        return None;
     }
+}
 
+
+struct IntParser;
+
+impl Parser<i64> for IntParser {
+    fn parse(&self, s:&str) -> Option<(i64,usize)> {
+        let rx = regex!(r"^[+-]?[0-9]+");
+        if let Some(uv) = rx.find(s) {
+            let value = i64::from_str(&s[uv.0..uv.1]).unwrap();
+            return Some((value, uv.1));
+        }
+        return None;
+    }
 }
 
 fn main() {
