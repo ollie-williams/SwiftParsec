@@ -50,7 +50,7 @@ impl Parser for IntParser {
     }
 }
 
-struct FollowedBy<P1,P2> {
+struct FollowedBy<P1:Parser, P2:Parser> {
     first: P1,
     second: P2
 }
