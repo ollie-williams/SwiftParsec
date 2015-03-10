@@ -96,7 +96,7 @@ fn main() {
   let ipt = "Hello42!";
 
   let p1 = RxParser::new(r"^Hello");
-  let p2 = IntParser;
+  let p2 = Pipe{ base:IntParser, func: |x| (2 * x) };
   let parser = FollowedBy {first:p1, second:p2};
 
   if let Some(res) = parser.parse(ipt) {
