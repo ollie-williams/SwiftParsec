@@ -46,6 +46,11 @@ impl Parser for RxParser {
         return None;
     }
 }
+impl Clone for RxParser {
+    fn clone(&self) -> RxParser {
+        RxParser{ rx:self.rx.clone() }
+    }
+}
 
 // IntParser
 //
@@ -273,7 +278,7 @@ fn main() {
   let cparen = RxParser { rx: regex!(r"^\)") };
   let skip = Prsr::new( RxParser { rx: regex!(r"^\s*") } );
 
-  let skipleaf = skip >> leaf;
+  let skipleaf = skip.clone() >> leaf << skip.clone();
   //oparen >> (identifier + (skip >> leaf)) << cparen
   //[box drop(oparen), box identifier, box drop(skip), box leaf, box drop(cparen)];
 
