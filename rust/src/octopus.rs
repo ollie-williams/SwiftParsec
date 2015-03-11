@@ -4,6 +4,7 @@ extern crate regex;
 use regex::Regex;
 extern crate core;
 use core::ops::Shr;
+use core::ops::Shl;
 use std::str::FromStr;
 use std::clone::Clone;
 
@@ -87,6 +88,27 @@ impl<P1,P2> Parser for FollowedBy<P1,P2>
     }
 }
 
+struct FollowedByFirst<P1:Parser, P2:Parser> {
+    first: P1,
+    second: P2
+}
+impl<P1,P2> Parser for FollowedByFirst<P1,P2>
+    where P1: Parser,
+          P2: Parser
+{
+    type Output = P1::Output;
+
+    fn parse(&self, s:&str) -> Option<(P1::Output, usize)> {
+        if let Some(v1) = self.first.parse(s) {
+            let s2 = &s[v1.1..];
+            if let Some(v2) = self.second.parse_ignore(s2) {
+                return Some((v1.0, v1.1 + v2));
+            }
+        }
+        return None;
+    }
+}
+
 struct FollowedBySecond<P1:Parser, P2:Parser> {
     first: P1,
     second: P2
@@ -107,6 +129,8 @@ impl<P1,P2> Parser for FollowedBySecond<P1,P2>
         return None;
     }
 }
+
+
 
 // Pipe
 //
@@ -222,6 +246,21 @@ impl<P1, P2> Shr<Prsr<P2>> for Prsr<P1>
 
     fn shr(self, rhs:Prsr<P2>) -> Prsr<FollowedBySecond<P1,P2>> {
         Prsr::new( FollowedBySecond{first:self.p, second:rhs.p} )
+    }
+}
+
+// Shl <<
+//
+// Implements the << operator for two Prsrs by interpreting it as FollowedByFirst, that is: p1 <<
+// p2 parses p1 and p2 in series, but only keeps the result of p1.
+impl<P1, P2> Shl<Prsr<P2>> for Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedByFirst<P1,P2>>;
+
+    fn shl(self, rhs:Prsr<P2>) -> Prsr<FollowedByFirst<P1,P2>> {
+        Prsr::new( FollowedByFirst{first:self.p, second:rhs.p} )
     }
 }
 
