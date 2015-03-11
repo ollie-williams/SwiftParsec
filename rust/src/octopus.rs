@@ -46,11 +46,6 @@ impl Parser for RxParser {
         return None;
     }
 }
-impl Clone for RxParser {
-    fn clone(&self) -> RxParser {
-        RxParser{ rx:self.rx.clone() }
-    }
-}
 
 // IntParser
 //
@@ -213,29 +208,21 @@ impl Expr {
 //
 // Wrapper struct used to encapsulate implementations of Parser so that it is possible to
 // provide operator overloading
-struct Prsr<P:Parser> {
-    p: P
+struct Prsr<'a, P:Parser> {
+    p: &'a P
 }
-impl<P> Prsr<P> where P:Parser {
-    fn new(p:P) -> Prsr<P> {
+impl<'a, P> Prsr<'a, P> where P:Parser {
+    fn new(p:&'a P) -> Prsr<'a, P> {
         Prsr {p:p}
     }
 }
 
-impl<P> Parser for Prsr<P>
+impl<'a, P> Parser for Prsr<'a, P>
     where P:Parser
 {
     type Output = P::Output;
     fn parse(&self, s:&str) -> Option<(P::Output,usize)> {
         self.p.parse(s)
-    }
-}
-
-impl<P> Clone for Prsr<P>
-    where P:Parser + Clone
-{
-    fn clone(&self) -> Prsr<P> {
-        Prsr {p:self.p.clone()}
     }
 }
 
