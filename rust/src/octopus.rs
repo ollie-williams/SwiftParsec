@@ -5,6 +5,7 @@ use regex::Regex;
 extern crate core;
 use core::ops::Shr;
 use core::ops::Shl;
+use core::ops::Add;
 use std::str::FromStr;
 use std::clone::Clone;
 
@@ -201,20 +202,6 @@ impl<P> Parser for LateBound<P>
 }
 */
 
-enum Expr {
-    Leaf(String),
-    Func(String, Box<Expr>)
-}
-
-impl Expr {
-    fn make_leaf(name:String) -> Expr {
-        Expr::Leaf(name)
-    }
-
-    fn make_func(name:String, arg:Expr) -> Expr {
-        Expr::Func(name, Box::new(arg))
-    }
-}
 
 // Prsr
 //
@@ -251,6 +238,36 @@ impl<'a, P1, P2> Shr<&'a Prsr<P2>> for &'a Prsr<P1>
         Prsr::new( FollowedBySecond{first:&self.p, second:&rhs.p} )
     }
 }
+impl<'a, P1, P2> Shr<&'a Prsr<P2>> for Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedBySecond<P1,&'a P2>>;
+
+    fn shr(self, rhs:&'a Prsr<P2>) -> Prsr<FollowedBySecond<P1,&'a P2>> {
+        Prsr::new( FollowedBySecond{first:self.p, second:&rhs.p} )
+    }
+}
+impl<'a, P1, P2> Shr<Prsr<P2>> for &'a Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedBySecond<&'a P1,P2>>;
+
+    fn shr(self, rhs:Prsr<P2>) -> Prsr<FollowedBySecond<&'a P1,P2>> {
+        Prsr::new( FollowedBySecond{first:&self.p, second:rhs.p} )
+    }
+}
+impl<P1, P2> Shr<Prsr<P2>> for Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedBySecond<P1,P2>>;
+
+    fn shr(self, rhs:Prsr<P2>) -> Prsr<FollowedBySecond<P1,P2>> {
+        Prsr::new( FollowedBySecond{first:self.p, second:rhs.p} )
+    }
+}
 
 // Shl <<
 //
@@ -266,7 +283,6 @@ impl<'a, P1, P2> Shl<&'a Prsr<P2>> for &'a Prsr<P1>
         Prsr::new( FollowedByFirst{first:&self.p, second:&rhs.p} )
     }
 }
-
 impl<'a, P1, P2> Shl<&'a Prsr<P2>> for Prsr<P1>
     where P1:Parser,
           P2:Parser
@@ -277,28 +293,115 @@ impl<'a, P1, P2> Shl<&'a Prsr<P2>> for Prsr<P1>
         Prsr::new( FollowedByFirst{first:self.p, second:&rhs.p} )
     }
 }
+impl<'a, P1, P2> Shl<Prsr<P2>> for &'a Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedByFirst<&'a P1,P2>>;
+
+    fn shl(self, rhs:Prsr<P2>) -> Prsr<FollowedByFirst<&'a P1,P2>> {
+        Prsr::new( FollowedByFirst{first:&self.p, second:rhs.p} )
+    }
+}
+impl<P1, P2> Shl<Prsr<P2>> for Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedByFirst<P1,P2>>;
+
+    fn shl(self, rhs:Prsr<P2>) -> Prsr<FollowedByFirst<P1,P2>> {
+        Prsr::new( FollowedByFirst{first:self.p, second:rhs.p} )
+    }
+}
+
+// Add +
+//
+// Implements the + operator for two Prsrs by interpreting it as FollowedBy, that is: p1 + p2
+// parses p1 and p2 in series and keeps both results as a tuple.
+impl<'a, P1, P2> Add<&'a Prsr<P2>> for &'a Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedBy<&'a P1,&'a P2>>;
+
+    fn add(self, rhs:&'a Prsr<P2>) -> Prsr<FollowedBy<&'a P1,&'a P2>> {
+        Prsr::new( FollowedBy{first:&self.p, second:&rhs.p} )
+    }
+}
+impl<'a, P1, P2> Add<Prsr<P2>> for &'a Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedBy<&'a P1,P2>>;
+
+    fn add(self, rhs:Prsr<P2>) -> Prsr<FollowedBy<&'a P1,P2>> {
+        Prsr::new( FollowedBy{first:&self.p, second:rhs.p} )
+    }
+}
+impl<'a, P1, P2> Add<&'a Prsr<P2>> for Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedBy<P1,&'a P2>>;
+
+    fn add(self, rhs:&'a Prsr<P2>) -> Prsr<FollowedBy<P1,&'a P2>> {
+        Prsr::new( FollowedBy{first:self.p, second:&rhs.p} )
+    }
+}
+impl<P1, P2> Add<Prsr<P2>> for Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedBy<P1,P2>>;
+
+    fn add(self, rhs:Prsr<P2>) -> Prsr<FollowedBy<P1,P2>> {
+        Prsr::new( FollowedBy{first:self.p, second:rhs.p} )
+    }
+}
+
+
+enum Expr {
+    Leaf(String),
+    Func(String, Box<Expr>)
+}
+
+impl Expr {
+    fn make_leaf(name:String) -> Expr {
+        Expr::Leaf(name)
+    }
+
+    fn make_func(name:String, arg:Expr) -> Expr {
+        Expr::Func(name, Box::new(arg))
+    }
+
+    fn make_func_tuple(namearg:(String,Expr)) -> Expr {
+        Expr::make_func(namearg.0, namearg.1)
+    }
+}
+impl std::fmt::Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        match *self {
+            Expr::Leaf(ref name) => f.write_str(name.as_slice()),
+            Expr::Func(ref name,  ref expr) => write!(f, "({} {})", name, expr)
+        }
+    }
+}
 
 fn main() {
 
-  let identifier = RxParser {rx: regex!(r"^[_a-zA-Z][_a-zA-Z0-9]*")};
-  let leaf = Pipe{ base:identifier, func: Expr::make_leaf };
-  let leafr = Prsr::new( leaf );
+  let identifier = Prsr::new( RxParser {rx: regex!(r"^[_a-zA-Z][_a-zA-Z0-9]*")} );
+  let leaf = Prsr::new( Pipe{ base:&identifier, func: Expr::make_leaf } );
 
-  let oparen = RxParser { rx: regex!(r"^\(") };
-  let cparen = RxParser { rx: regex!(r"^\)") };
-  let skip = RxParser { rx: regex!(r"^\s*") };
-  let skipr = Prsr::new( skip );
+  let oparen = Prsr::new( RxParser { rx: regex!(r"^\(") } );
+  let cparen = Prsr::new( RxParser { rx: regex!(r"^\)") } );
+  let skip = Prsr::new( RxParser { rx: regex!(r"^\s*") } );
 
-  let skipleaf = &skipr >> &leafr << &skipr;
-  //oparen >> (identifier + (skip >> leaf)) << cparen
-  //[box drop(oparen), box identifier, box drop(skip), box leaf, box drop(cparen)];
+  let expr_parse = &oparen >> (&identifier + (&skip >> &leaf)) << &cparen;
+  let expr = Pipe{ base:expr_parse, func: Expr::make_func_tuple };
 
-
-  let ipt = "Hello42!";
-  if let Some(res) = skipleaf.parse(ipt) {
-      if let Expr::Leaf(name) = res.0 {
-          println!("leaf: {}", name);
-      }
+  let ipt = "(Hello World)!";
+  if let Some(res) = expr.parse(ipt) {
+      println!("expression: {}", res.0);
   }
 
   let p1 = RxParser::new(r"^Hello");
