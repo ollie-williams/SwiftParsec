@@ -20,6 +20,17 @@ trait Parser {
     }
 }
 
+impl<'a, P> Parser for &'a P
+    where P:Parser
+{
+    type Output = P::Output;
+
+    fn parse(&self, s:&str) -> Option<(P::Output,usize)> {
+        (*self).parse(s)
+    }
+}
+
+
 // RxParser
 //
 // Parse a regular expression
@@ -208,16 +219,15 @@ impl Expr {
 //
 // Wrapper struct used to encapsulate implementations of Parser so that it is possible to
 // provide operator overloading
-struct Prsr<'a, P:Parser> {
-    p: &'a P
+struct Prsr<P:Parser> {
+    p: P
 }
-impl<'a, P> Prsr<'a, P> where P:Parser {
-    fn new(p:&'a P) -> Prsr<'a, P> {
+impl<P> Prsr<P> where P:Parser {
+    fn new(p:P) -> Prsr<P> {
         Prsr {p:p}
     }
 }
-
-impl<'a, P> Parser for Prsr<'a, P>
+impl<P> Parser for Prsr<P>
     where P:Parser
 {
     type Output = P::Output;
@@ -230,42 +240,46 @@ impl<'a, P> Parser for Prsr<'a, P>
 //
 // Implements the >> operator for two Prsrs by interpreting it as FollowedBySecond, that is: p1 >>
 // p2 parses p1 and then p2 in series, but only keeps the result of p2.
-impl<P1, P2> Shr<Prsr<P2>> for Prsr<P1>
+impl<'a, P1, P2> Shr<&'a Prsr<P2>> for &'a Prsr<P1>
     where P1:Parser,
           P2:Parser
 {
-    type Output = Prsr<FollowedBySecond<P1,P2>>;
+    type Output = FollowedBySecond<&'a P1,&'a P2>;
 
-    fn shr(self, rhs:Prsr<P2>) -> Prsr<FollowedBySecond<P1,P2>> {
-        Prsr::new( FollowedBySecond{first:self.p, second:rhs.p} )
+    fn shr(self, rhs:&'a Prsr<P2>) -> FollowedBySecond<&'a P1,&'a P2> {
+        FollowedBySecond{first:&self.p, second:&rhs.p}
     }
 }
 
+/*
 // Shl <<
 //
 // Implements the << operator for two Prsrs by interpreting it as FollowedByFirst, that is: p1 <<
 // p2 parses p1 and p2 in series, but only keeps the result of p1.
-impl<P1, P2> Shl<Prsr<P2>> for Prsr<P1>
+impl<'a, P1, P2> Shl<Prsr<'a, P2>> for Prsr<'a, P1>
     where P1:Parser,
           P2:Parser
 {
-    type Output = Prsr<FollowedByFirst<P1,P2>>;
+    type Output = FollowedByFirst<'a, P1,P2>;
 
-    fn shl(self, rhs:Prsr<P2>) -> Prsr<FollowedByFirst<P1,P2>> {
-        Prsr::new( FollowedByFirst{first:self.p, second:rhs.p} )
+    fn shl(self, rhs:Prsr<'a, P2>) -> FollowedByFirst<'a, P1,P2> {
+        FollowedByFirst{first:self.p, second:rhs.p}
     }
 }
+*/
 
 fn main() {
 
   let identifier = RxParser {rx: regex!(r"^[_a-zA-Z][_a-zA-Z0-9]*")};
-  let leaf = Prsr::new( Pipe{ base:identifier, func: Expr::make_leaf } );
+  let leaf = Pipe{ base:identifier, func: Expr::make_leaf };
+  let leafr = Prsr::new( leaf );
 
   let oparen = RxParser { rx: regex!(r"^\(") };
   let cparen = RxParser { rx: regex!(r"^\)") };
-  let skip = Prsr::new( RxParser { rx: regex!(r"^\s*") } );
+  let skip = RxParser { rx: regex!(r"^\s*") };
+  let skipr = Prsr::new( skip );
 
-  let skipleaf = skip.clone() >> leaf << skip.clone();
+  let skipleaf = &skipr >> &leafr;//)) << skipr;
   //oparen >> (identifier + (skip >> leaf)) << cparen
   //[box drop(oparen), box identifier, box drop(skip), box leaf, box drop(cparen)];
 
