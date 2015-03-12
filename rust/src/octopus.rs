@@ -20,6 +20,7 @@ trait Parser {
     }
 }
 
+// References to parsers are also parsers
 impl<'a, P> Parser for &'a P
     where P:Parser
 {
@@ -217,8 +218,8 @@ impl Expr {
 
 // Prsr
 //
-// Wrapper struct used to encapsulate implementations of Parser so that it is possible to
-// provide operator overloading
+// Boxing struct used to encapsulate implementations of Parser so that it is possible to provide
+// operator overloading
 struct Prsr<P:Parser> {
     p: P
 }
@@ -244,29 +245,38 @@ impl<'a, P1, P2> Shr<&'a Prsr<P2>> for &'a Prsr<P1>
     where P1:Parser,
           P2:Parser
 {
-    type Output = FollowedBySecond<&'a P1,&'a P2>;
+    type Output = Prsr<FollowedBySecond<&'a P1,&'a P2>>;
 
-    fn shr(self, rhs:&'a Prsr<P2>) -> FollowedBySecond<&'a P1,&'a P2> {
-        FollowedBySecond{first:&self.p, second:&rhs.p}
+    fn shr(self, rhs:&'a Prsr<P2>) -> Prsr<FollowedBySecond<&'a P1,&'a P2>> {
+        Prsr::new( FollowedBySecond{first:&self.p, second:&rhs.p} )
     }
 }
 
-/*
 // Shl <<
 //
 // Implements the << operator for two Prsrs by interpreting it as FollowedByFirst, that is: p1 <<
 // p2 parses p1 and p2 in series, but only keeps the result of p1.
-impl<'a, P1, P2> Shl<Prsr<'a, P2>> for Prsr<'a, P1>
+impl<'a, P1, P2> Shl<&'a Prsr<P2>> for &'a Prsr<P1>
     where P1:Parser,
           P2:Parser
 {
-    type Output = FollowedByFirst<'a, P1,P2>;
+    type Output = Prsr<FollowedByFirst<&'a P1,&'a P2>>;
 
-    fn shl(self, rhs:Prsr<'a, P2>) -> FollowedByFirst<'a, P1,P2> {
-        FollowedByFirst{first:self.p, second:rhs.p}
+    fn shl(self, rhs:&'a Prsr<P2>) -> Prsr<FollowedByFirst<&'a P1,&'a P2>> {
+        Prsr::new( FollowedByFirst{first:&self.p, second:&rhs.p} )
     }
 }
-*/
+
+impl<'a, P1, P2> Shl<&'a Prsr<P2>> for Prsr<P1>
+    where P1:Parser,
+          P2:Parser
+{
+    type Output = Prsr<FollowedByFirst<P1,&'a P2>>;
+
+    fn shl(self, rhs:&'a Prsr<P2>) -> Prsr<FollowedByFirst<P1,&'a P2>> {
+        Prsr::new( FollowedByFirst{first:self.p, second:&rhs.p} )
+    }
+}
 
 fn main() {
 
@@ -279,7 +289,7 @@ fn main() {
   let skip = RxParser { rx: regex!(r"^\s*") };
   let skipr = Prsr::new( skip );
 
-  let skipleaf = &skipr >> &leafr;//)) << skipr;
+  let skipleaf = &skipr >> &leafr << &skipr;
   //oparen >> (identifier + (skip >> leaf)) << cparen
   //[box drop(oparen), box identifier, box drop(skip), box leaf, box drop(cparen)];
 
