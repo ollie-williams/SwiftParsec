@@ -188,19 +188,26 @@ impl<P1,P2> Parser for Choice<P1,P2>
 }
 
 
-struct LateBound<P:Parser> {
-    inner: Option<P>
+struct LateBound<T> {
+    inner: Option<Box<Fn(&str)->Option<(T,usize)>>>,
 }
 
-/*
-impl<P> Parser for LateBound<P>
-    where P: Parser
+impl<T> LateBound<T> {
+    fn new() -> LateBound<T> {
+        LateBound{inner: None }
+    }
+}
+impl<T> Parser for LateBound<T>
 {
-    type Output = P::Output;
+    type Output = T;
 
-    fn parse(&self, s:&str) -> Op
+    fn parse(&self, s:&str) -> Option<(T,usize)> {
+        match self.inner {
+            Some(ref p) => (*p)(s),
+            None => panic!("No parser provided for late bound.")
+        }
+    }
 }
-*/
 
 
 // Prsr
@@ -396,8 +403,9 @@ fn main() {
   let cparen = Prsr::new( RxParser { rx: regex!(r"^\)") } );
   let skip = Prsr::new( RxParser { rx: regex!(r"^\s*") } );
 
+  let expr = Prsr::new( LateBound::<Expr>::new() );
   let expr_parse = &oparen >> (&identifier + (&skip >> &leaf)) << &cparen;
-  let expr = Pipe{ base:expr_parse, func: Expr::make_func_tuple };
+  let expr_impl = Pipe{ base:expr_parse, func: Expr::make_func_tuple };
 
   let ipt = "(Hello World)!";
   if let Some(res) = expr.parse(ipt) {
