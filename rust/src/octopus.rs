@@ -429,14 +429,13 @@ let mut expr = LateBound::<Expr>::new();
   let cparen = Prsr::new( RxParser { rx: regex!(r"^\)") } );
   let skip = Prsr::new( RxParser { rx: regex!(r"^\s*") } );
 
-  let mut expr = LateBound::<Expr>::new();
+  let mut expr = Prsr::new( LateBound::<Expr>::new() );
 
-  let expr_parse = oparen >> (identifier + (skip >> leaf)) << cparen;
-  let expr_impl = Pipe{ base:expr_parse, func: Expr::make_func_tuple };
-  //let mut expr = LateBound::<Expr>::new();
-  //expr.inner = Some(Box::new(expr_impl));
-  //let expr = LateBound {inner: Some(Box::new(expr_impl))};
-  expr.set(expr_impl);
+  let func_base = oparen >> (identifier + (skip >> &expr)) << cparen;
+  let func = Pipe{ base:func_base, func: Expr::make_func_tuple };
+
+  let expr_impl = Choice {first:func, second:leaf};
+  expr.p.set(expr_impl);
 
 
   let ipt = "(Hello World)!";
