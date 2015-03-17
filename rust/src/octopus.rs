@@ -59,6 +59,12 @@ impl Parser for RxParser {
         return None;
     }
 }
+impl Clone for RxParser
+{
+    fn clone(&self) -> Self {
+        RxParser{ rx:self.rx.clone()}
+    }
+}
 
 // IntParser
 //
@@ -188,28 +194,6 @@ impl<P1,P2> Parser for Choice<P1,P2>
 }
 
 
-struct LateBound<T> {
-    inner: Option<Box<Fn(&str)->Option<(T,usize)>>>,
-}
-
-impl<T> LateBound<T> {
-    fn new() -> LateBound<T> {
-        LateBound{inner: None }
-    }
-}
-impl<T> Parser for LateBound<T>
-{
-    type Output = T;
-
-    fn parse(&self, s:&str) -> Option<(T,usize)> {
-        match self.inner {
-            Some(ref p) => (*p)(s),
-            None => panic!("No parser provided for late bound.")
-        }
-    }
-}
-
-
 // Prsr
 //
 // Boxing struct used to encapsulate implementations of Parser so that it is possible to provide
@@ -228,6 +212,13 @@ impl<P> Parser for Prsr<P>
     type Output = P::Output;
     fn parse(&self, s:&str) -> Option<(P::Output,usize)> {
         self.p.parse(s)
+    }
+}
+impl<P> Clone for Prsr<P>
+    where P:Parser+Clone
+{
+    fn clone(&self) -> Self {
+        Prsr {p:self.p.clone()}
     }
 }
 
@@ -366,6 +357,34 @@ impl<P1, P2> Add<Prsr<P2>> for Prsr<P1>
     }
 }
 
+struct LateBound<T> {
+    //inner: Option<Box<Fn(&str)->Option<(T,usize)>>>,
+    inner: Option<Box<Parser<Output=T>>>,
+}
+
+impl<T> LateBound<T> {
+    fn new() -> LateBound<T> {
+        LateBound{inner: None}
+    }
+
+    fn set<P:Parser<Output=T> + 'static>(&mut self, p:P)
+    {
+        self.inner = Some(Box::new(p))
+    }
+}
+
+impl<T> Parser for LateBound<T>
+{
+    type Output = T;
+
+    fn parse(&self, s:&str) -> Option<(T,usize)> {
+        match self.inner {
+            Some(ref p) => (*p).parse(s),
+            None => panic!("No parser provided for late bound.")
+        }
+    }
+}
+
 
 enum Expr {
     Leaf(String),
@@ -396,31 +415,35 @@ impl std::fmt::Display for Expr {
 
 fn main() {
 
+/*
+let mut expr = LateBound::<Expr>::new();
+  let identifier = RxParser {rx: regex!(r"^[_a-zA-Z][_a-zA-Z0-9]*")};
+  let leaf = Pipe{ base:identifier, func: Expr::make_leaf };
+  expr.set(leaf);
+*/
+
   let identifier = Prsr::new( RxParser {rx: regex!(r"^[_a-zA-Z][_a-zA-Z0-9]*")} );
-  let leaf = Prsr::new( Pipe{ base:&identifier, func: Expr::make_leaf } );
+  let leaf = Prsr::new( Pipe{ base:identifier.clone(), func: Expr::make_leaf } );
 
   let oparen = Prsr::new( RxParser { rx: regex!(r"^\(") } );
   let cparen = Prsr::new( RxParser { rx: regex!(r"^\)") } );
   let skip = Prsr::new( RxParser { rx: regex!(r"^\s*") } );
 
-  let expr = Prsr::new( LateBound::<Expr>::new() );
-  let expr_parse = &oparen >> (&identifier + (&skip >> &leaf)) << &cparen;
+  let mut expr = LateBound::<Expr>::new();
+
+  let expr_parse = oparen >> (identifier + (skip >> leaf)) << cparen;
   let expr_impl = Pipe{ base:expr_parse, func: Expr::make_func_tuple };
+  //let mut expr = LateBound::<Expr>::new();
+  //expr.inner = Some(Box::new(expr_impl));
+  //let expr = LateBound {inner: Some(Box::new(expr_impl))};
+  expr.set(expr_impl);
+
 
   let ipt = "(Hello World)!";
   if let Some(res) = expr.parse(ipt) {
       println!("expression: {}", res.0);
-  }
-
-  let p1 = RxParser::new(r"^Hello");
-  let p2 = Pipe{ base:IntParser, func: |x| (2 * x) };
-  let parser = FollowedBy {first:p1, second:p2};
-
-  if let Some(res) = parser.parse(ipt) {
-      let rem = &ipt[res.1..];
-      let value = res.0;
-      println!("Result: {}, {}\nRemainder: {}", value.0, value.1, rem);
   } else {
-      println!("No match");
+      println!("No match.");
   }
+
 }

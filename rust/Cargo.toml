@@ -7,5 +7,5 @@ authors = [ "Oliver Williams <ollie@olliewilliams.org>" ]
 name = "octopus"
 
 [dependencies]
-regex = "0.1.18"
-regex_macros = "0.1.11"
+regex = "0.1.20"
+regex_macros = "0.1.12"
