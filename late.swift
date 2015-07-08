@@ -10,7 +10,6 @@ class LateBound<T>: Parser {
     if let impl = inner {
       return impl(stream)
     }
-    fatalError("No inner implementation was provided for late-bound parser.")
-    return nil
+    fatalError("No inner implementation was provided for late-bound parser.")    
   }
 }
