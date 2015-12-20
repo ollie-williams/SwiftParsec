@@ -1,5 +1,4 @@
-import Darwin
-import Cocoa
+import Foundation
 
 //---------------------------------//
 // Inputs
@@ -44,7 +43,7 @@ class CharStream {
   func startsWithRegex(pattern: String) -> String? {
     if let range = str.rangeOfString(
       pattern,
-      options: .RegularExpressionSearch | .AnchoredSearch,
+      options: [.RegularExpressionSearch, .AnchoredSearch],
       range: pos..<str.endIndex,
       locale: nil) {
       return str.substringWithRange(range)
@@ -53,7 +52,7 @@ class CharStream {
   }
 
   func advance(count: Int) -> Void {
-    pos = Swift.advance(pos, count)
+    pos = pos.advancedBy(count)
   }
 
   func error(msg: String) -> Void {}

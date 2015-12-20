@@ -10,7 +10,7 @@ class Token<T:Parser, V> : Parser {
   }
 
   func parse(stream:CharStream) -> Target? {
-    if let dummy = trigger.parse(stream) {
+    if let _ = trigger.parse(stream) {
       return value
     }
     return nil

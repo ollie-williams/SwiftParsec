@@ -86,9 +86,9 @@ private class OpSet<V,O:Parser where O.Target==String> {
   }
 
   func get(stream:CharStream) -> V? {
-    if let try = next {
+    if let val = next {
       next = nil
-      return try
+      return val
     }
     let old = stream.pos
     if let str = pattern.parse(stream) {

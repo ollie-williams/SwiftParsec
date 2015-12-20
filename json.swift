@@ -7,7 +7,7 @@ func makeObj(values:[(String,JSValue)]) -> JSObject {
   return record
 }
 
-enum JSValue : Printable {
+enum JSValue : CustomStringConvertible {
   case string(String)
   case number(Double)
   case object(JSObject)
@@ -50,12 +50,12 @@ struct JSParser : Parser {
   static let objval = object |> JSValue.make
   static let array = LateBound<JSValue>()
   static let bool = (const(true) | const(false)) |> JSValue.make
-  static let null = token(const("null"), JSValue.null)
+  static let null = token(const("null"), value: JSValue.null)
   static let value = (null | objval | array | bool | stringval | number) ~> skip
 
   static let pair = string ~>~ (colon >~ value)
-  static let objimpl = ocurly >~ sepby(pair, comma) ~> ccurly |> makeObj
-  static let arrayimpl = obrack >~ sepby(value, comma) ~> cbrack |> JSValue.makeary
+  static let objimpl = ocurly >~ sepby(pair, sep: comma) ~> ccurly |> makeObj
+  static let arrayimpl = obrack >~ sepby(value, sep: comma) ~> cbrack |> JSValue.makeary
 
 
   static func parse(str:String) -> JSObject? {
