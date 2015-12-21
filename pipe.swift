@@ -24,7 +24,7 @@ func pipe<T:Parser, V>(inner: T, fn: T.Target -> V) -> Pipe<T,V> {
 
 infix operator |> {associativity left precedence 130}
 func |> <T: Parser, V>(inner: T, fn: T.Target -> V) -> Pipe<T,V> {
-  return pipe(inner, fn)
+  return pipe(inner, fn: fn)
 }
 
 

@@ -1,24 +1,24 @@
 import Darwin
 
 func lnprint<T>(val:T, file: String = __FILE__, line: Int = __LINE__) -> Void {
-  println("\(file)(\(line)): \(val)")
+  print("\(file)(\(line)): \(val)")
 }
 
 func parse<T:Parser>(parser:T, string:String) -> T.Target? {
-  var stream = CharStream(str:string)
+  let stream = CharStream(str:string)
   return parser.parse(stream)
 }
 
-let json_input = String(contentsOfFile: "test.json")!
-println(json_input)
+let json_input = try! String(contentsOfFile: "test.json")
+print(json_input)
 let json = JSParser.parse(json_input)
-println(json!)
+print(json!)
 
 import Cocoa
 
 func readline() -> String {
-  var keyboard = NSFileHandle.fileHandleWithStandardInput()
-  var inputData = keyboard.availableData
+  let keyboard = NSFileHandle.fileHandleWithStandardInput()
+  let inputData = keyboard.availableData
   return NSString(data: inputData, encoding:NSUTF8StringEncoding)! as String
 }
 
@@ -36,9 +36,9 @@ func mainloop() -> Void {
     }
 
     if let result = calcp.parse(stream) {
-      println(result)
+      print(result)
     } else {
-      println("syntax error")
+      print("syntax error")
     }
   }
 }

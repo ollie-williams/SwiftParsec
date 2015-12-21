@@ -1,6 +1,3 @@
-import Cocoa
-import Darwin
-
 class Constant<T> : Parser {
   let value: T
   let str: String
@@ -14,7 +11,7 @@ class Constant<T> : Parser {
 
   func parse(stream: CharStream) -> Target? {
     if stream.startsWith(str) {
-      stream.advance(count(str))
+      stream.advance(str.characters.count)
       return value
     }
     stream.error("Expected \(str)")
@@ -37,7 +34,7 @@ class Regex : Parser {
 
   func parse(stream:CharStream) -> Target? {
     if let match = stream.startsWithRegex(pattern) {
-      stream.advance(count(match))
+      stream.advance(match.characters.count)
       return match
     }
     return nil
@@ -92,7 +89,7 @@ func eof() -> EndOfFile {
 // Helpful versions which turn arrays of Characters into Strings
 func arrayToString<T:Parser where T.Target==Array<Character>>
   (parser: T) -> Pipe<T, String> {
-  return pipe(parser, {return String($0)})
+  return pipe(parser, fn: {return String($0)})
 }
 
 func manychars<T:Parser where T.Target==Character>

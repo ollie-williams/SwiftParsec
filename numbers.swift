@@ -1,11 +1,9 @@
-import Cocoa
-
 struct Integer : Parser {
   typealias Target = Int
 
   static let impl = pipe(
     regex("[+-]?[0-9]+"),
-    {$0.toInt()!})
+    fn: {Int($0)!})
 
   func parse(stream:CharStream) -> Int? {
     return Integer.impl.parse(stream)
@@ -19,12 +17,13 @@ struct FloatParser : Parser {
   private let strict:Bool
 
   static func stringToFloat(str:String) -> Double {
-    return (str as NSString).doubleValue
+    if let d = Double(str) { return d }
+    return Double.NaN
   }
 
   static let impl = pipe(
         regex("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?"),
-        FloatParser.stringToFloat)
+        fn: FloatParser.stringToFloat)
 
   init(strict:Bool) {
     self.strict = strict
@@ -36,7 +35,7 @@ struct FloatParser : Parser {
     }
 
     let start = stream.pos
-    if let ip = Integer().parse(stream) {
+    if let _ = Integer().parse(stream) {
       let intend = stream.pos
       stream.pos = start
       if let fp = FloatParser.impl.parse(stream) {
